@@ -124,6 +124,18 @@ Third-party app update inventory is intentionally unavailable (no invented
 version data). See `Docs/SparkleSetup.md` for the key generation, secrets and
 release runbook, and `Docs/Distribution.md` for the two distribution editions.
 
+## Download
+
+Latest release: [GitHub Releases / Latest Release](https://github.com/salmanbashir80/SalmanMacCleaner/releases/latest)
+
+1. Download the `.dmg` or `.zip` file from the Latest Release.
+2. Open the downloaded file.
+3. Drag **8002CleanUp.app** to your Applications folder.
+4. Launch the application.
+5. Grant Full Disk Access only when prompted.
+
+*(Note: If only an unsigned build is available, macOS Gatekeeper may block the launch. You may need to manually approve the app in System Settings -> Privacy & Security.)*
+
 ## Building
 
 ```bash
