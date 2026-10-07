@@ -239,8 +239,12 @@ struct TrashBinsView: View {
 
     private func load() {
         isLoading = true
+        // Resolve the Trash roots on the main actor, then hand the immutable
+        // list to the background task (calling trashMounts() inside the
+        // detached task is a cross-actor call and does not compile).
+        let roots = [NSHomeDirectory() + "/.Trash"] + trashMounts()
         Task.detached(priority: .userInitiated) {
-            let trashRoots = [NSHomeDirectory() + "/.Trash"] + trashMounts()
+            let trashRoots = roots
             var found: [TrashEntry] = []
             var total: Int64 = 0
 
@@ -278,9 +282,13 @@ struct TrashBinsView: View {
 
             found.sort { $0.size > $1.size }
 
+            // Hoist into immutable values: a concurrent closure may not capture
+            // mutable local state.
+            let finalEntries = found
+            let finalTotal = total
             await MainActor.run {
-                entries = found
-                totalBytes = total
+                entries = finalEntries
+                totalBytes = finalTotal
                 isLoading = false
             }
         }
