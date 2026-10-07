@@ -453,6 +453,7 @@ def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
+				DEFINES_MODULE = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SalmanCleanerMobile/Info.plist;
@@ -479,6 +480,7 @@ def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
+				DEFINES_MODULE = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SalmanCleanerMobile/Info.plist;
