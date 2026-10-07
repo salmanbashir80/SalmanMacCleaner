@@ -1,9 +1,9 @@
 # 8002CleanUp — restoration report (release v1.0.13 → verified 2026-08-27 state)
 
 Date: 2026-10-07
-Restore commit: `5e67e54` (branch `arena/1e501ddc-salmanmaccleaner`); the earlier working
-restore commit `d852159` was squash-rewritten into it so the branch could be pushed without
-`.github/workflows/` changes (see Option C, "Push constraint").
+Branch `arena/1e501ddc-salmanmaccleaner`: `5e67e54` (restore), `5757d6f` (compile fix confirmed
+by CI), plus this report. An earlier commit `d852159` was squash-rewritten into `5e67e54` so the
+branch could be pushed without `.github/workflows/` changes (see Option C, "Push constraint").
 Branch: `arena/1e501ddc-salmanmaccleaner` (based on `main` @ `63e9c9c4e594560a214d3aba1129b8d0c7586db6`)
 Environment used for the work: Linux (Debian 12, x86_64), Python 3.11 — **no macOS, no Xcode, no Swift toolchain**.
 
@@ -84,6 +84,7 @@ Additionally fixed in this pass (defects present in the released state):
 | **CI committing into the repo** | The "Commit Logs on Failure" steps force-added `build.log`, `test.log`, `job_log*.txt`, `run_status*.json`, `jobs*.json`, `annotations.json`, `artifacts.json`, `step_logs.txt` to the repo; they are deleted and logs now upload as workflow artifacts. |
 | **Raw localization keys in the UI** | 10 keys used by the restored Trash/Duplicate views (`trash.restore_selected`, `trash.delete_permanently`, `permanent_delete_confirmation_title`, …) were **never defined in any commit**, so the UI displayed the raw key. They are now defined in `en.lproj/Localizable.strings` (603 used keys, 0 undefined). |
 | **Dead code** | `Features/TrashBins/TrashValidator.swift` was never referenced by any code path *and* never added to the Xcode project → removed. |
+| **TrashBinsView did not compile under Xcode 15.2** | The first macOS CI run on this branch failed with exactly three errors in the restored file (`243:30: expression is 'async' but is not marked with 'await'`; `282:27` and `283:30: reference to captured var 'found'/'total' in concurrently-executing code`). Fixed in `5757d6f` with the same hoisting main's variant carries: resolve `[~/.Trash] + trashMounts()` on the main actor before the detached task, and hoist `found`/`total` into immutable locals before `await MainActor.run`. The next run passed. |
 | **Stale URLs** | `8002salman-ai/SalmanMacCleaner` → `salmanbashir80/SalmanMacCleaner` (app menu, settings, appcast, support workflow). |
 
 ---
@@ -154,15 +155,37 @@ Baseline check: `Tools/validate_project.py` on **unmodified `main` (`63e9c9c`)**
 4 errors (dead empty button, `emptyTrash` outside the policy) — the released state did not even
 pass the repository's own validator, and the old CI never ran it.
 
+### macOS compile + test evidence (GitHub Actions, real hardware)
+
+The first CI run on this branch is what found the three concurrency errors above; after the fix,
+**the restored source compiles and the test suite passes on macOS**:
+
+| Run | Workflow | Event | Commit | Result | Steps |
+| --- | --- | --- | --- | --- | --- |
+| [37675648454](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37675648454) | `CI` | pull_request | `5757d6f` | **success** | `Run Unit Tests` ✅ · `Build Debug` ✅ · `Build Release (Unsigned)` ✅ · `Package Mac Application` ✅ (`Create GitHub Release` correctly skipped) |
+| 37675150238 | `CI` | pull_request | `abfaa89` | failure | 3 `TrashBinsView.swift` concurrency errors (fixed in `5757d6f`) |
+
+Runner: `macos-14`, Xcode 15.2, Swift 5.9, `xcodebuild test -destination 'platform=macOS'`.
+The failing run's log was recovered from the `ci-logs-mac` branch the old workflow pushes on
+failure (`git show origin/ci-logs-mac:mac_test.log`); the passing run's log host is blocked from
+this sandbox, so the evidence for it is the job/step conclusions from the GitHub API.
+This is **compile + unit-test evidence**, not launch/install evidence.
+
 ### What is NOT verified — stated plainly
 
-- **The app was not compiled, not tested, not launched and not installed.** There is no macOS and
-  no Xcode/Swift toolchain in this environment (`xcodebuild`, `swift`, `swiftc`: not found;
-  OS: Debian 12 x86_64). No `.app`, `.dmg`, `.xcarchive` or `xcresult` exists in the ZIP.
-- tree-sitter is a **syntax** parser, not a type checker: it proves the restored files parse, not
-  that they compile.
-- The released ZIP asset could not be downloaded (network policy), so the comparison with the
-  released binary is source-level only.
+- **Nothing was compiled or tested in the working environment itself.** There is no macOS and no
+  Xcode/Swift toolchain here (`xcodebuild`, `swift`, `swiftc`: not found; OS: Debian 12 x86_64).
+  Compilation and unit tests were exercised only through GitHub's macOS runner (see above).
+- **The app was never launched or installed** — on this machine (no macOS) or on a runner. No
+  `.app`, `.dmg`, `.xcarchive` or `.xcresult` is included in the ZIP; the release asset could not
+  be downloaded, so no binary was inspectable.
+- tree-sitter is a **syntax** parser, not a type checker: locally it only proves the restored
+  files parse. Compilation proof comes from the macOS CI run above, on the repository's own
+  workflow (which uses `CODE_SIGNING_ALLOWED=NO`); the ad-hoc signing flags in the new
+  `Support/workflows/ci.yml` template have not been exercised on a runner yet.
+- The released ZIP asset (`release-assets.githubusercontent.com`) and the CI log host
+  (`results-receiver.actions.githubusercontent.com`) are both blocked from this sandbox, so the
+  comparison with the released binary is source-level only.
 - The iOS target (`SalmanCleanerMobile`) was not verified here; it is untouched by this restore.
 - No commit hash, test result or ZIP content in this report is invented — every claim above comes
   from the commands shown, and everything unverified is listed in this section.
