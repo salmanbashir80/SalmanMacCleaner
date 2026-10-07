@@ -179,7 +179,7 @@ public enum ScanCoverageReport {
             deniedPaths: deniedPaths,
             confidence: confidence,
             limitedByPermission: limitedByPermission,
-            permissionReason: permissionReason,
+            permissionReason: permissionReason
         )
     }
 
