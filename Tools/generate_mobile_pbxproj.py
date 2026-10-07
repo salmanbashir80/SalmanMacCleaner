@@ -382,6 +382,7 @@ def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
                 SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+                SUPPORTS_MACCATALYST = NO;
                 TARGETED_DEVICE_FAMILY = "1,2";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -437,6 +438,7 @@ def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
                 SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+                SUPPORTS_MACCATALYST = NO;
                 TARGETED_DEVICE_FAMILY = "1,2";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
