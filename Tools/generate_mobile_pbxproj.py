@@ -288,6 +288,24 @@ def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
 		}};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		700000000000000000000001 /* PBXTargetDependency */ = {{
+			isa = PBXTargetDependency;
+			target = {APP_TARGET_ID} /* SalmanCleanerMobile */;
+			targetProxy = 600000000000000000000001 /* PBXContainerItemProxy */;
+		}};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		600000000000000000000001 /* PBXContainerItemProxy */ = {{
+			isa = PBXContainerItemProxy;
+			containerPortal = {PROJECT_ID} /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = {APP_TARGET_ID};
+			remoteInfo = SalmanCleanerMobile;
+		}};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXSourcesBuildPhase section */
 		500000000000000000000003 /* Sources */ = {{
 			isa = PBXSourcesBuildPhase;

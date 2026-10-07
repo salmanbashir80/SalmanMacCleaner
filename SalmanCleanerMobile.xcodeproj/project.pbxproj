@@ -193,6 +193,24 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		700000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 600000000000000000000002 /* SalmanCleanerMobile */;
+			targetProxy = 600000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		600000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 600000000000000000000002;
+			remoteInfo = SalmanCleanerMobile;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXSourcesBuildPhase section */
 		500000000000000000000003 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
