@@ -47,11 +47,12 @@ jobs:
           CODE_SIGNING_ALLOWED=NO \
           test > test.log 2>&1 || exit 1
 
-    - name: Upload Logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-logs
-        path: |
-          build.log
-          test.log
+    - name: Commit Logs on Failure
+      if: failure()
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git checkout -b ci-logs
+        git add build.log test.log || true
+        git commit -m "Upload CI logs" || true
+        git push origin ci-logs -f
