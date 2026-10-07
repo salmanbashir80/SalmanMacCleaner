@@ -129,17 +129,27 @@ Third-party app update inventory is intentionally unavailable (no invented
 version data). See `Docs/SparkleSetup.md` for the key generation, secrets and
 release runbook, and `Docs/Distribution.md` for the two distribution editions.
 
-## Download
+## Download & install
 
-Latest release: [GitHub Releases / Latest Release](https://github.com/salmanbashir80/SalmanMacCleaner/releases/latest)
+**Two different things can be downloaded from this repository — read this first:**
 
-1. Download the `.dmg` or `.zip` file from the Latest Release.
-2. Open the downloaded file.
-3. Drag **8002CleanUp.app** to your Applications folder.
-4. Launch the application.
-5. Grant Full Disk Access only when prompted.
+| What you have | What it is | What to do |
+| --- | --- | --- |
+| `8002CleanUp-1.2.0-build12-…-source.zip` | **Source code only.** The complete Xcode project — no `.app`, no binary of any kind | Build it once on your Mac: `./Scripts/build_and_verify_macos.sh --install` (or double-click `Scripts/Install.command`). Full guide: **`INSTALL.md`** |
+| A `.zip` from [GitHub Releases](https://github.com/salmanbashir80/SalmanMacCleaner/releases) | A prebuilt app bundle produced by CI | Unpack, then open the app; macOS may ask you to confirm the first launch |
 
-*(Note: If only an unsigned build is available, macOS Gatekeeper may block the launch. You may need to manually approve the app in System Settings -> Privacy & Security.)*
+Nothing in this repository is signed with a Developer ID or notarized, so macOS
+Gatekeeper may block the first launch of any build you make or download:
+**right-click the app → Open → Open**, or run
+`xattr -dr com.apple.quarantine /Applications/SalmanMacCleaner.app`.
+
+Grant **Full Disk Access** (System Settings → Privacy & Security → Full Disk Access) only when
+you want complete scans; without it the app still runs and reports limited/denied areas honestly.
+
+> **About the `v1.0.6` / `v1.0.13` releases:** those tags were CI run numbers
+> (`v1.0.${{ github.run_number }}`), not product versions, and they were built from a `main`
+> state that was missing seven working commits. They are superseded by this restore
+> (product version **1.2.0 (12)**). See `RESTORE_REPORT.md` for the full evidence.
 
 ## Building
 
