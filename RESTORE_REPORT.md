@@ -163,7 +163,8 @@ The first CI run on this branch is what found the three concurrency errors above
 
 | Run | Workflow | Event | Commit | Result | Steps |
 | --- | --- | --- | --- | --- | --- |
-| [37675648454](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37675648454) | `CI` | pull_request | `5757d6f` | **success** | `Run Unit Tests` ✅ · `Build Debug` ✅ · `Build Release (Unsigned)` ✅ · `Package Mac Application` ✅ (`Create GitHub Release` correctly skipped) |
+| [37679861978](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37679861978) | `CI` | pull_request | `7d6ebac` (final tree) | **success** | `Run Unit Tests` ✅ · `Build Debug` ✅ · `Build Release (Unsigned)` ✅ · `Package Mac Application` ✅ (`Create GitHub Release` correctly skipped) |
+| [37675648454](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37675648454) | `CI` | pull_request | `5757d6f` | **success** | same four steps ✅ |
 | 37675150238 | `CI` | pull_request | `abfaa89` | failure | 3 `TrashBinsView.swift` concurrency errors (fixed in `5757d6f`) |
 
 Runner: `macos-14`, Xcode 15.2, Swift 5.9, `xcodebuild test -destination 'platform=macOS'`.

@@ -52,8 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Verified
 
 - Restored source compiles and the XCTest suite passes on macOS
-  (GitHub Actions `CI` run 37675648454, commit `5757d6f`, `macos-14` / Xcode 15.2:
-  unit tests, Debug build, Release build and packaging all succeeded).
+  (GitHub Actions `CI` runs 37675648454 on `5757d6f` and 37679861978 on the final
+  tree `7d6ebac`, `macos-14` / Xcode 15.2: unit tests, Debug build, Release build
+  and packaging all succeeded).
 - The first run on this branch caught three real concurrency errors in the restored
   `TrashBinsView.swift` (`expression is 'async' but is not marked with 'await'`,
   captured `found`/`total` in concurrently-executing code); they are fixed and the
