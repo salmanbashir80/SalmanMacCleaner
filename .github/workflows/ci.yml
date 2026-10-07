@@ -32,7 +32,17 @@ jobs:
     - name: Run Unit Tests
       run: |
         set -o pipefail
-        xcodebuild test -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
+        xcodebuild test -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO > mac_test.log 2>&1 || exit 1
+
+    - name: Commit Logs on Failure
+      if: failure()
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git checkout -b ci-logs-mac
+        git add mac_test.log -f || true
+        git commit -m "Upload Mac CI logs" || true
+        git push origin ci-logs-mac -f
 
     - name: Build Debug
       run: |
