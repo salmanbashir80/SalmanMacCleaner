@@ -372,24 +372,21 @@ struct TrashBinsView: View {
     // MARK: - Permanent delete
 
     private func performPermanentDelete(paths: [String]) {
-        let trashPrefix = (NSHomeDirectory() + "/.Trash/").lowercased()
-        
-        let safePaths = paths.filter { path in
-            let lowercased = path.lowercased()
-            // Ensure path is actually inside the Trash folder
-            guard lowercased.hasPrefix(trashPrefix) else { return false }
-            // Guard against traversal
-            guard !lowercased.contains("/../") else { return false }
-            return true
-        }
+        let safePaths = paths.filter { TrashValidator.isValidTrashPath($0) }
 
         var deletedCount = 0
+        var deletedBytes: Int64 = 0
+        
         // Perform permanent deletion
         for path in safePaths {
             let url = URL(fileURLWithPath: path, isDirectory: false)
+            let entry = entries.first(where: { $0.path == path })
             do {
                 try FileManager.default.removeItem(at: url)
                 deletedCount += 1
+                if let size = entry?.size {
+                    deletedBytes += size
+                }
             } catch {
                 print("Failed to permanently delete \(path): \(error)")
             }
@@ -403,7 +400,7 @@ struct TrashBinsView: View {
             action: "trash.permanently_deleted",
             category: "trash",
             itemCount: deletedCount,
-            bytes: 0, // Should be calculated, keeping 0 for safety
+            bytes: deletedBytes,
             dryRun: false,
             root: NSHomeDirectory() + "/.Trash"
         ))
@@ -415,20 +412,21 @@ struct TrashBinsView: View {
         // Get all paths
         let allPaths = entries.map { $0.path }
         
-        let trashPrefix = (NSHomeDirectory() + "/.Trash/").lowercased()
+        let safePaths = allPaths.filter { TrashValidator.isValidTrashPath($0) }
 
-        let safePaths = allPaths.filter { path in
-            let lowercased = path.lowercased()
-            guard lowercased.hasPrefix(trashPrefix) else { return false }
-            guard !lowercased.contains("/../") else { return false }
-            return true
-        }
-
+        var deletedCount = 0
+        var deletedBytes: Int64 = 0
+        
         // Perform permanent deletion of safe paths
         for path in safePaths {
             let url = URL(fileURLWithPath: path, isDirectory: false)
+            let entry = entries.first(where: { $0.path == path })
             do {
                 try FileManager.default.removeItem(at: url)
+                deletedCount += 1
+                if let size = entry?.size {
+                    deletedBytes += size
+                }
             } catch {
                 print("Failed to permanently delete \(path): \(error)")
             }
@@ -439,10 +437,10 @@ struct TrashBinsView: View {
 
         // Record in history
         appState.history.record(HistoryEntry(
-            action: "trash.emoved",
+            action: "trash.emptied",
             category: "trash",
-            itemCount: safePaths.count,
-            bytes: totalBytes,
+            itemCount: deletedCount,
+            bytes: deletedBytes,
             dryRun: false,
             root: NSHomeDirectory() + "/.Trash"
         ))

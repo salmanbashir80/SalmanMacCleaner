@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Salman Mac Cleaner â€” Sparkle 2 appcast template.
+  Salman Mac Cleaner — Sparkle 2 appcast template.
 
   The release workflow regenerates this file with real EdDSA-signed entries
   (Tools: Sparkle's `generate_appcast`) and pushes it to `main` so the stable

@@ -15,7 +15,7 @@ they exist.
   `https://raw.githubusercontent.com/salmanbashir80/SalmanMacCleaner/main/Support/appcast.xml`
 - Public EdDSA key (`SUPublicEDKey` in `Info.plist`): placeholder until you
   run the key generation below.
-- Menu command: **8002CleanUp â†’ Check for Updatesâ€¦** (âŒ˜U).
+- Menu command: **8002CleanUp → Check for Updates…** (⌘U).
 
 ## Configuration gate
 
@@ -27,7 +27,7 @@ they exist.
    (`anchor apple generic` requirement)
 
 Until all three hold, the app honestly reports
-**"Development build â€” updates are disabled."** No unsigned update can ever
+**"Development build — updates are disabled."** No unsigned update can ever
 be installed.
 
 ## One-time key generation (local, private key never committed)
@@ -37,10 +37,10 @@ be installed.
 curl -fsSL -o sparkle.tar.xz https://github.com/sparkle-project/Sparkle/releases/download/2.6.4/Sparkle-2.6.4.tar.xz
 tar -xJf sparkle.tar.xz
 
-# 2. Generate the EdDSA key pair â€” KEEP THE PRIVATE KEY OFFLINE
+# 2. Generate the EdDSA key pair — KEEP THE PRIVATE KEY OFFLINE
 ./bin/generate_keys
-#   private key â†’ Sparkle_private_ed25519.key   (store in GitHub secret)
-#   public key  â†’ printed; paste into Info.plist SUPublicEDKey
+#   private key → Sparkle_private_ed25519.key   (store in GitHub secret)
+#   public key  → printed; paste into Info.plist SUPublicEDKey
 
 # 3. Set the public key in SalmanMacCleaner/Info.plist
 #    <key>SUPublicEDKey</key><string>PASTE_PUBLIC_KEY_HERE</string>

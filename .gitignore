@@ -21,4 +21,3 @@ __pycache__/
 
 # GitHub workflows live in Support/workflows/ and are copied to
 # .github/workflows/ when CI is enabled (see Docs/ReleaseWorkflow.md).
-.github/workflows/

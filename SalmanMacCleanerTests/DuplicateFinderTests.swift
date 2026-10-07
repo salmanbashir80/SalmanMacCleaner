@@ -429,7 +429,7 @@ func testDuplicateFinderRetryState() throws {
     // Retry should reset state
     viewModel.retryScan(settings: SettingsStore(), activity: AppState())
     
-    XCTAssertTrue(viewModel.roots.isEmpty || !viewModel.roots.isEmpty, "Roots should be preserved or reset appropriately")
+    XCTAssertFalse(viewModel.roots.isEmpty, "Roots should be preserved or reset appropriately")
     XCTAssertNil(viewModel.errorMessage, "Error should be cleared after retry")
     XCTAssertFalse(viewModel.isScanning, "Should not be scanning after retry initialization")
 }
@@ -497,19 +497,19 @@ func testTrashRestoreValidation() throws {
 
 @MainActor
 func testTrashSafety() throws {
-    let trashPrefix = (NSHomeDirectory() + "/.Trash/").lowercased()
-    
     // Valid trash path
     let validPath = NSHomeDirectory() + "/.Trash/test.txt"
-    XCTAssertTrue(validPath.lowercased().hasPrefix(trashPrefix))
-    XCTAssertFalse(validPath.lowercased().contains("/../"))
+    XCTAssertTrue(TrashValidator.isValidTrashPath(validPath), "Valid trash file should be allowed")
     
     // Invalid path outside trash
     let invalidPath = NSHomeDirectory() + "/Documents/test.txt"
-    XCTAssertFalse(invalidPath.lowercased().hasPrefix(trashPrefix))
+    XCTAssertFalse(TrashValidator.isValidTrashPath(invalidPath), "External file should be denied")
     
     // Directory traversal attack
     let traversalPath = NSHomeDirectory() + "/.Trash/../Documents/test.txt"
-    XCTAssertTrue(traversalPath.lowercased().hasPrefix(trashPrefix))
-    XCTAssertTrue(traversalPath.lowercased().contains("/../")) // Traversal detected
+    XCTAssertFalse(TrashValidator.isValidTrashPath(traversalPath), "Traversal escape should be denied")
+    
+    // Misleading prefix
+    let misleadingPath = NSHomeDirectory() + "/.Trash-evil/test.txt"
+    XCTAssertFalse(TrashValidator.isValidTrashPath(misleadingPath), "Misleading prefix should be denied")
 }

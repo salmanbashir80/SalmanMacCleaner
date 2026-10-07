@@ -4,7 +4,7 @@
 //
 //  App entry point: Aurora window sizing, shared environment objects,
 //  appearance preference and native menu commands (including
-//  "Check for Updatesâ€¦").
+//  "Check for Updates…").
 //
 
 import SwiftUI
@@ -19,8 +19,15 @@ struct SalmanMacCleanerApp: App {
 
     init() {
         // Prevent duplicate instances of the app from running simultaneously
-        if NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier!).count > 1 {
-            NSApplication.shared.terminate(nil)
+        if let bundleIdentifier = Bundle.main.bundleIdentifier {
+            let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
+            if runningApps.count > 1 {
+                // Keep the oldest instance running, terminate if we are a newly launched duplicate
+                let sorted = runningApps.sorted { ($0.launchDate ?? Date.distantFuture) < ($1.launchDate ?? Date.distantFuture) }
+                if let oldest = sorted.first, oldest != NSRunningApplication.current {
+                    NSApplication.shared.terminate(nil)
+                }
+            }
         }
     }
 
