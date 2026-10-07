@@ -180,7 +180,7 @@ struct SettingsView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
                     Button("about.github") {
-                        guard let url = URL(string: "https://github.com/8002salman-ai/SalmanMacCleaner") else { return }
+                        guard let url = URL(string: "https://github.com/salmanbashir80/SalmanMacCleaner") else { return }
                         NSWorkspace.shared.open(url)
                     }
                     Button("about.license_view") {

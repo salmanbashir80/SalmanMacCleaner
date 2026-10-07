@@ -4,7 +4,7 @@
 //
 //  App entry point: Aurora window sizing, shared environment objects,
 //  appearance preference and native menu commands (including
-//  "Check for Updates…").
+//  "Check for Updatesâ€¦").
 //
 
 import SwiftUI
@@ -16,6 +16,13 @@ struct SalmanMacCleanerApp: App {
     @StateObject private var accessibility = AccessibilityEnvironment.shared
     @StateObject private var permissionService = PermissionService.shared
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Prevent duplicate instances of the app from running simultaneously
+        if NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier!).count > 1 {
+            NSApplication.shared.terminate(nil)
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -53,7 +60,7 @@ struct SalmanMacCleanerApp: App {
             }
             CommandGroup(replacing: .help) {
                 Button(NSLocalizedString("menu.readme", comment: "")) {
-                    guard let url = URL(string: "https://github.com/8002salman-ai/SalmanMacCleaner") else { return }
+                    guard let url = URL(string: "https://github.com/salmanbashir80/SalmanMacCleaner") else { return }
                     NSWorkspace.shared.open(url)
                 }
             }

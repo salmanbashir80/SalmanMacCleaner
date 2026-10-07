@@ -118,6 +118,8 @@ public final class SparkleUpdaterController: ObservableObject {
                 updaterDelegate: delegate,
                 userDriverDelegate: nil
             )
+            updaterController?.updater.automaticallyChecksForUpdates = true
+            updaterController?.updater.automaticallyDownloadsUpdates = true
         }
         delegate.owner = self
         #endif

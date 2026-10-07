@@ -483,110 +483,33 @@ func testTrashMoveToTrashUsesFileManager() throws {
     let trashURL = URL(fileURLWithPath: trashPath, isDirectory: true)
     
     // Verify trash directory concept exists
-    XCTAssert(FileManager.default.fileExists(atPath: trashPath) || true, "Trash directory concept")
+    XCTAssert(FileManager.default.fileExists(atPath: trashPath), "Trash directory exists")
     
     // Cleanup
     try? FileManager.default.removeItem(at: sandbox)
 }
 
 @MainActor
-func testTrashRestore() throws {
-    // Test restore functionality
-    let sandbox = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("restore_test_\(UUID().uuidString)", isDirectory: true)
-    try? FileManager.default.createDirectory(at: sandbox, withIntermediateDirectories: true)
-    
-    let testFile = sandbox.appendingPathComponent("test.txt")
-    try "test content".write(to: testFile)
-    
-    // Record original path
-    let originalPath = testFile.path
-    
-    // Simulate moving to trash (copy to .Trash, record original path)
-    let trashPath = NSHomeDirectory() + "/.Trash"
-    let trashFolder = URL(fileURLWithPath: trashPath, isDirectory: true)
-    
-    do {
-        // Create a copy in trash with original path recorded
-        let trashCopy = trashFolder.appendingPathComponent("test.txt")
-        try? FileManager.default.copyItem(at: testFile, to: trashCopy)
-        
-        // Restore should work
-        try FileManager.default.moveItem(at: trashCopy, to: testFile)
-        
-        // Verify file was restored
-        let restoredValues = try? testFile.resourceValues(forKeys: [.contentModificationDateKey])
-        XCTAssertNotNil(restoredValues, "File should be restored")
-    } catch {
-        // Fallback: if move fails, just verify the concept
-        XCTAssert(true, "Restore concept tested")
-    }
-    
-    // Cleanup
-    try? FileManager.default.removeItem(at: sandbox)
+func testTrashRestoreValidation() throws {
+    // Tests that we don't assume restore works when original path is unknown
+    XCTAssertNil(TrashEntry(path: "/test", name: "test", size: 0, isDirectory: false, originalPath: nil).originalPath)
 }
 
 @MainActor
-func testTrashPermanentDeleteConfirmation() throws {
-    // Test that permanent delete requires confirmation
-    let viewModel = DuplicatesViewModel()  // Using VM just for context
+func testTrashSafety() throws {
+    let trashPrefix = (NSHomeDirectory() + "/.Trash/").lowercased()
     
-    // Permanent delete should not happen without explicit confirmation
-    // The alert is shown with 'permanent_delete_confirmation_message'
-    // and destructive button labeled 'permanent_delete'
+    // Valid trash path
+    let validPath = NSHomeDirectory() + "/.Trash/test.txt"
+    XCTAssertTrue(validPath.lowercased().hasPrefix(trashPrefix))
+    XCTAssertFalse(validPath.lowercased().contains("/../"))
     
-    // Verify the confirmation mechanism exists
-    XCTAssert(true, "Permanent delete confirmation mechanism exists")
-}
-
-@MainActor
-func testTrashProtectedPaths() throws {
-    // Test that protected/system files are never permanently deleted
-    let protectedPaths = [
-        "/System/",
-        "/Library/",
-        "/Applications/",
-        NSHomeDirectory() + "/"
-    ]
+    // Invalid path outside trash
+    let invalidPath = NSHomeDirectory() + "/Documents/test.txt"
+    XCTAssertFalse(invalidPath.lowercased().hasPrefix(trashPrefix))
     
-    // All paths should be checked against protection table
-    for path in protectedPaths {
-        let lowercased = path.lowercased()
-        // The system should never auto-delete these
-        XCTAssertTrue(lowercased.isEmpty || true, "Protected path: \(path)")
-    }
-}
-
-@MainActor
-func testEveryModuleRenderingNonEmptyContent() throws {
-    // Verify that each module has non-empty content rendering logic
-    // by checking that their views have at least one content branch
-    
-    // Duplicate Finder - has multiple state branches
-    let duplicateViewModel = DuplicatesViewModel()
-    let hasContentBranches = true  // Verified through code inspection
-    XCTAssert(hasContentBranches, "Duplicate Finder has content branches")
-    
-    // Large & Old Files - has content rendering
-    let largeFilesViewModel = LargeFilesViewModel()
-    XCTAssertFalse(largeFilesViewModel.roots.isEmpty || true, "Large files has content rendering")
-    
-    // App Leftovers - has content rendering
-    let appLeftoversViewModel = AppLeftoversViewModel()
-    XCTAssertFalse(appLeftoversViewModel.leftovers.isEmpty || true, "App leftovers has content rendering")
-    
-    // Developer Caches - has content rendering
-    let devCacheViewModel = DeveloperCachesViewModel()
-    XCTAssertFalse(devCacheViewModel.deniedPaths.isEmpty || true, "Developer caches has content rendering")
-    
-    // Performance - has content rendering
-    let performanceViewModel = PerformanceViewModel()
-    XCTAssertFalse(performanceViewModel.thermalTitle.isEmpty || true, "Performance has content rendering")
-    
-    // Security Audit - has content rendering
-    let securityViewModel = SecurityAuditViewModel()
-    XCTAssertFalse(securityViewModel.snapshot.isEmpty || true, "Security audit has content rendering")
-    
-    // Smart Care - has content rendering
-    let smartCareViewModel = SmartCareViewModel()
-    XCTAssertFalse(smartCareViewModel.healthResult.isEmpty || true, "Smart Care has content rendering")
+    // Directory traversal attack
+    let traversalPath = NSHomeDirectory() + "/.Trash/../Documents/test.txt"
+    XCTAssertTrue(traversalPath.lowercased().hasPrefix(trashPrefix))
+    XCTAssertTrue(traversalPath.lowercased().contains("/../")) // Traversal detected
 }

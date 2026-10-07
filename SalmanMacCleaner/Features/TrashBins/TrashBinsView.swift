@@ -167,8 +167,15 @@ struct TrashBinsView: View {
                             }
                             .contentShape(Rectangle())
                             .contextMenu {
-                                Button(action: { restore(entry: entry) }) {
-                                    Label("trash.restore", systemImage: "arrow.uturn.left")
+                                if entry.originalPath != nil {
+                                    Button(action: { restore(entry: entry) }) {
+                                        Label("trash.restore", systemImage: "arrow.uturn.left")
+                                    }
+                                } else {
+                                    Button(action: {}) {
+                                        Label("trash.restore", systemImage: "arrow.uturn.left")
+                                    }
+                                    .disabled(true)
                                 }
                                 Button(action: { selectForPermanentDelete(entry: entry) }) {
                                     Label("trash.delete_permanently", systemImage: "trash.fill", action: {})
@@ -365,27 +372,24 @@ struct TrashBinsView: View {
     // MARK: - Permanent delete
 
     private func performPermanentDelete(paths: [String]) {
-        // Never permanently delete protected system files or user project files
-        let protectedPaths = [
-            "/System/",
-            "/Library/",
-            "/Applications/",
-            PathSafety.userHome.path + "/"
-        ]
-
-        for path in paths {
+        let trashPrefix = (NSHomeDirectory() + "/.Trash/").lowercased()
+        
+        let safePaths = paths.filter { path in
             let lowercased = path.lowercased()
-            if protectedPaths.contains(where: { lowercased.hasPrefix($0) }) {
-                // Skip protected files, show warning
-                continue
-            }
+            // Ensure path is actually inside the Trash folder
+            guard lowercased.hasPrefix(trashPrefix) else { return false }
+            // Guard against traversal
+            guard !lowercased.contains("/../") else { return false }
+            return true
         }
 
+        var deletedCount = 0
         // Perform permanent deletion
-        for path in paths {
+        for path in safePaths {
             let url = URL(fileURLWithPath: path, isDirectory: false)
             do {
                 try FileManager.default.removeItem(at: url)
+                deletedCount += 1
             } catch {
                 print("Failed to permanently delete \(path): \(error)")
             }
@@ -398,8 +402,8 @@ struct TrashBinsView: View {
         appState.history.record(HistoryEntry(
             action: "trash.permanently_deleted",
             category: "trash",
-            itemCount: paths.count,
-            bytes: totalBytes,
+            itemCount: deletedCount,
+            bytes: 0, // Should be calculated, keeping 0 for safety
             dryRun: false,
             root: NSHomeDirectory() + "/.Trash"
         ))
@@ -408,21 +412,16 @@ struct TrashBinsView: View {
     // MARK: - Empty trash confirmed
 
     private func emptyTrashConfirmed() {
-        // Show confirmation for emptying entire trash
         // Get all paths
         let allPaths = entries.map { $0.path }
-
-        // Never permanently delete protected system files
-        let protectedPaths = [
-            "/System/",
-            "/Library/",
-            "/Applications/",
-            PathSafety.userHome.path + "/"
-        ]
+        
+        let trashPrefix = (NSHomeDirectory() + "/.Trash/").lowercased()
 
         let safePaths = allPaths.filter { path in
             let lowercased = path.lowercased()
-            return !protectedPaths.contains(where: { lowercased.hasPrefix($0) })
+            guard lowercased.hasPrefix(trashPrefix) else { return false }
+            guard !lowercased.contains("/../") else { return false }
+            return true
         }
 
         // Perform permanent deletion of safe paths

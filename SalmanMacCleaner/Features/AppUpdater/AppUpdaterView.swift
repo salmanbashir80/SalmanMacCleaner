@@ -87,7 +87,7 @@ struct AppUpdaterView: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 10) {
                 Button {
-                    if let url = URL(string: "https://github.com/8002salman-ai/SalmanMacCleaner/releases") {
+                    if let url = URL(string: "https://github.com/salmanbashir80/SalmanMacCleaner/releases") {
                         NSWorkspace.shared.open(url)
                     }
                 } label: {
