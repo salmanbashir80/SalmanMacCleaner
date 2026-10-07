@@ -128,7 +128,8 @@ CHANGELOG.md, README.md, SECURITY.md           accurate Trash/sandbox policy; re
 Docs/Distribution.md, Docs/ReleaseWorkflow.md  sandbox rationale; CI/release documentation
 TEST_REPORT-v1.2.0.md                          marked as the historical build-8 report
 Scripts/build_and_verify_macos.sh  (new)       build + verify + optional install on macOS
-RESTORE_REPORT.md  (new)                       this document
+INSTALL.md  (new)                              quick-start build/install/limitations guide
+RESTORE_REPORT.md  (new)                       this document (evidence + provenance audit)
 ```
 
 Removed: `TrashValidator.swift`, `Tools/generate_mobile_pbxproj.py.bak`, `build.log`, `test.log`,
@@ -193,6 +194,9 @@ This is **compile + unit-test evidence**, not launch/install evidence.
 ---
 
 ## 6. Exact steps to build, install and verify on macOS
+
+*(A standalone quick-start copy of this section ships as `INSTALL.md` at the project root,
+so anyone who unzips the archive sees the build/launch steps immediately.)*
 
 ### Option A — script (recommended)
 
@@ -293,3 +297,63 @@ a local Mac.
    `./Scripts/activate_workflows.sh` performs the copy and the owner pushes it.
 6. **`v1.0.6` / `v1.0.13` releases** remain on GitHub with misnamed tags; they were produced by the
    removed run-number logic. Deleting them (or re-tagging `v1.2.0`) is a repository-owner action.
+
+---
+
+## 8. Attribution / provenance audit — is anything named "Freebuff" in this project?
+
+**No. There is no evidence of a tool, service, branch, session, bot or person called
+"Freebuff" (or FreeBuf / Free Buff / freebuff) anywhere in this project or in the history that
+was inspectable from here.** The searches below were run against the full clone (all 12 remote
+branches, all 64 commits, all objects) plus the GitHub API and the local environment:
+
+| Search | Command | Result |
+| --- | --- | --- |
+| Commit messages, authors, committers, trailers | `git log --all --format='%an %ae %cn %ce %s %b' \| grep -i freebuff` | **0 hits** |
+| File contents in *every* revision | `git grep -I -i freebuff $(git rev-list --all)` | **0 hits** |
+| Unreachable/dangling git objects too | `git cat-file --batch-all-objects` blob scan | **0 hits** |
+| Refs, branches, tags, stash, notes, reflog | `git for-each-ref`, `git stash list`, `git notes list`, `git reflog --all` | **no such ref** |
+| Workspace files and filenames | `find /home/user -iname '*freebuff*'`, `grep -ril freebuff /home/user` | **0 hits** |
+| Environment / processes | `env`, `ps aux` | **0 hits** |
+| GitHub repo list of the owner | `gh api users/salmanbashir80/repos` | no repo of that name |
+| GitHub Actions actors on this repo | `gh api repos/.../actions/runs` → unique actors | only `salmanbashir80` |
+| Pull requests (all states) | `gh pr list --state all` | authors: `salmanbashir80`, `app/arena-ai-coding-agent` — no Freebuff |
+| Commit trailers across all history | `git log --all --format='%b'` | exactly one trailer type: `Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>` (26 commits) |
+
+Arena's own agent identities appear in the history, but none is called Freebuff:
+
+| Actor | How it appears | Commits |
+| --- | --- | --- |
+| `arena-ai-coding-agent[bot]` | author of 3 commits; author (`app/arena-ai-coding-agent`) of PRs #1–#4 | `1670d0d` (initial), `b4130ab`, `eaad166` |
+| `arena-agent` | **Co-authored-by trailer only** on 26 commits | e.g. `85468d2` … `a072429`, `f56d38e` |
+| `8002salman-ai` | author/committer, Aug 24–27 work (incl. the verified line) | 20 commits |
+| `salmanbashir80` | author/committer, Oct 6–7 work; owner account; PR #5 | 29 commits |
+| `github-actions[bot]` | author of the CI log-dump commits | 5 commits |
+| `Arena Agent <agent@arena.ai>` | this restore | 4 commits |
+
+### What actually made files and features disappear (evidence, not a guess)
+
+1. **Branch divergence, not a third-party tool.** `main` and the verified line split at
+   `0737d29` (2026-08-26). `main` received only `f56d38e`; the verified line continued with
+   `a072429`, `a6a9dd5`, `9f43293`, `35d71d7`, `b5eef52`, `5d37f6f`, `0e990e1`.
+   `git merge-base --is-ancestor f56d38e 0e990e1` → false (they are siblings). Those seven
+   commits — Full Disk Access fix, Smart Care stall fix, back navigation, compact window, Trash
+   validation — were never merged, so every `v1.0.x` release built from `main` lacked them.
+2. **The 2026-10-06/07 rewrite on `main`** (`salmanbashir80`, no co-author trailers):
+   - `d85b6a7` re-enabled App Sandbox (breaking Full Disk Access), deleted 117 lines of
+     regression tests, and deleted `Support/workflows/release.yml`;
+   - `a42e218` added `TrashValidator.swift` — never referenced and never added to the Xcode
+     project (dead code), and rewrote TrashBins view code;
+   - `9c30bb0` ("fix: compile errors in TrashBinsView") replaced the Trash-root validation with
+     the unsafe `path.contains(".Trash")` check;
+   - `63e9c9c` trimmed yet more test code.
+3. **`github-actions[bot]` added files rather than removing them**: the old CI's
+   "Commit Logs on Failure" steps force-added `build.log`, `test.log`, `job_log*.txt`,
+   `run_status*.json`, `jobs*.json`, `annotations.json`, `artifacts.json` and `step_logs.txt`
+   to the repository. Those are the junk files removed by this restore; the same steps also
+   created the `ci-logs` / `ci-logs-mac` branches.
+
+If "Freebuff" was seen outside this repository (for example as a browser extension, a macOS
+utility, or a label in another tool), it cannot be linked to these changes from any evidence in
+this repository or in the Arena-side history that is visible to this session — no such name is
+present in either.
