@@ -178,7 +178,7 @@ struct TrashBinsView: View {
                                     .disabled(true)
                                 }
                                 Button(action: { selectForPermanentDelete(entry: entry) }) {
-                                    Label("trash.delete_permanently", systemImage: "trash.fill", action: {})
+                                    Label("trash.delete_permanently", systemImage: "trash.fill")
                                 }
                                 .foregroundStyle(.red)
                             }
@@ -197,7 +197,7 @@ struct TrashBinsView: View {
 
                         if !selectedForPermanentDelete.isEmpty {
                             Button("trash.permanent_delete_selected") {
-                                performPermanentDelete(selected: Array(selectedForPermanentDelete))
+                                performPermanentDelete(paths: Array(selectedForPermanentDelete))
                             }
                             .buttonStyle(AuroraPrimaryButtonStyle())
                             .foregroundStyle(.red)
