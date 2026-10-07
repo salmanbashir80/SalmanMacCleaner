@@ -5,11 +5,11 @@
 ## Design guarantees
 
 1. **Preview-first.** Preview Mode is ON by default. Every cleanup can be previewed without touching the filesystem, and exiting Preview Mode is a deliberate, confirmed user action.
-2. **Trash-only removal.** The only destructive API used anywhere in the codebase is `FileManager.trashItem`. The app never permanently deletes files and never empties the Trash.
+2. **Trash-first removal.** Every scanning and cleanup module removes files only through `FileManager.trashItem`, and permanent deletion does not exist in the cleanup engine at all. The one module that can delete immediately is **Trash Bins**, and only for entries that already live inside a Trash root: each path is standardised and re-validated against the real Trash roots (`~/.Trash` plus per-volume trashes) with a prefix check, and the action requires an explicit confirmation. A CI validator asserts that destructive APIs appear nowhere else in the codebase.
 3. **Three-layer cleanup.** Inventory scanning → `CleanupPlanBuilder` (immutable plan with expected identity) → `CleanupSafetyValidator` (TOCTOU revalidation immediately before every action) → `CleanupExecutor` (trash-only). Changed symlinks, changed inodes, changed owners and changed volumes are all rejected.
 4. **No shell, no root.** The app never uses `sudo`, `rm`, `unlink`, shell commands, `Process`, `NSTask`, `system()`, `popen()`, `bash`, `zsh`, `curl` or `wget`. A CI validator asserts this on every run.
 5. **No network.** The app performs no network requests of any kind — no analytics, no telemetry, no phoning home. (Sparkle is the sole exception and only when a real signed feed is configured.)
-6. **No Full Disk Access / admin required.** The core app runs in a sandbox with only user-selected file access; Full Disk Access is granted by the user in System Settings and probed honestly (likely/limited/not determined/denied).
+6. **No admin rights, no privileged helper.** The app never asks for an administrator password and installs no privileged helper. App Sandbox is **off** for this direct-distribution edition (a sandboxed process cannot reach `~/Library`, other volumes or protected locations even with Full Disk Access, so scans would silently degrade). Full Disk Access is granted — and can be revoked — by the user in System Settings, and the app probes it honestly (likely/limited/not determined/denied).
 7. **Explicit selection + second confirmation.** Only user-ticked items are ever passed to the cleanup engine, after a confirmation dialog.
 8. **Double validation.** Every path is validated when discovered and revalidated immediately before any mutation (TOCTOU protection).
 9. **Read-only Startup Manager.** Version 1 never modifies login items, launch agents or launch daemons.
