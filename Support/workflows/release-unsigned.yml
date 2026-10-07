@@ -1,0 +1,146 @@
+name: Release
+
+# Publishes a GitHub Release from an explicit tag (v*) or a manual dispatch.
+#
+# This workflow is the *unsigned / ad-hoc* fallback and needs no secrets:
+# it archives the app, signs it ad-hoc so it can launch on Apple Silicon,
+# verifies the bundle, packages it symlink-safely with `ditto`, records a
+# SHA-256 checksum and publishes the release.
+#
+# macOS still applies Gatekeeper quarantine to a downloaded, non-notarized
+# app, so users open it once with right-click → Open (or run
+# `xattr -dr com.apple.quarantine <app>`).
+#
+# For a Developer ID signed, notarized and stapled release (Sparkle appcast
+# included) use the signed pipeline in Docs/ReleaseWorkflow.md
+# (Support/workflows/release.yml) once the signing secrets exist.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and publish (e.g. v1.2.0)'
+        required: true
+        default: 'v1.2.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app 2>/dev/null \
+            || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Read the real product version from the project
+        id: app
+        run: |
+          MARKETING_VERSION=$(grep -m1 'MARKETING_VERSION' SalmanMacCleaner.xcodeproj/project.pbxproj | sed 's/.*= *//; s/;//')
+          BUILD_NUMBER=$(grep -m1 'CURRENT_PROJECT_VERSION' SalmanMacCleaner.xcodeproj/project.pbxproj | sed 's/.*= *//; s/;//')
+          echo "marketing=$MARKETING_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "App version on this commit: $MARKETING_VERSION (build $BUILD_NUMBER)"
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -project SalmanMacCleaner.xcodeproj \
+            -scheme SalmanMacCleaner -resolvePackageDependencies
+
+      - name: Structural validation
+        run: python3 Tools/validate_project.py
+
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project SalmanMacCleaner.xcodeproj \
+            -scheme SalmanMacCleaner \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee mac_test.log
+
+      - name: Archive (Release, ad-hoc signed, unsigned fallback)
+        run: |
+          set -o pipefail
+          if xcodebuild \
+               -project SalmanMacCleaner.xcodeproj \
+               -scheme SalmanMacCleaner \
+               -configuration Release \
+               -destination 'platform=macOS' \
+               -archivePath build/SalmanMacCleaner.xcarchive \
+               CODE_SIGN_IDENTITY="-" \
+               CODE_SIGN_STYLE=Manual \
+               DEVELOPMENT_TEAM="" \
+               2>&1 | tee archive.log; then
+            echo "Archived with ad-hoc signature."
+          else
+            echo "::warning::Ad-hoc archive failed - retrying unsigned."
+            xcodebuild \
+              -project SalmanMacCleaner.xcodeproj \
+              -scheme SalmanMacCleaner \
+              -configuration Release \
+              -destination 'platform=macOS' \
+              -archivePath build/SalmanMacCleaner.xcarchive \
+              CODE_SIGNING_ALLOWED=NO \
+              2>&1 | tee archive.log
+          fi
+
+      - name: Export and verify the app
+        run: |
+          mkdir -p dist
+          APP_SRC="build/SalmanMacCleaner.xcarchive/Products/Applications/SalmanMacCleaner.app"
+          test -d "$APP_SRC" || { echo "::error::archive did not contain an app bundle"; exit 1; }
+          cp -R "$APP_SRC" dist/
+          du -sh dist/SalmanMacCleaner.app
+          /usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" dist/SalmanMacCleaner.app/Contents/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" dist/SalmanMacCleaner.app/Contents/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" dist/SalmanMacCleaner.app/Contents/Info.plist
+          codesign --verify --deep --strict --verbose=2 dist/SalmanMacCleaner.app \
+            || echo "::warning::app is not code-signed (manual Gatekeeper approval required)"
+
+      - name: Create release ZIP (symlink-safe) and checksum
+        run: |
+          NAME="8002CleanUp-${{ steps.app.outputs.marketing }}-build${{ steps.app.outputs.build }}-macos.zip"
+          ditto -c -k --keepParent dist/SalmanMacCleaner.app "dist/$NAME"
+          cd dist && shasum -a 256 "$NAME" | tee checksums.txt
+          test -s "checksums.txt"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NAME="8002CleanUp-${{ steps.app.outputs.marketing }}-build${{ steps.app.outputs.build }}-macos.zip"
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            "dist/$NAME" \
+            "dist/checksums.txt" \
+            --repo "${{ github.repository }}" \
+            --title "8002CleanUp ${{ steps.app.outputs.marketing }} (build ${{ steps.app.outputs.build }})" \
+            --notes "Unsigned/ad-hoc build of 8002CleanUp ${{ steps.app.outputs.marketing }} (build ${{ steps.app.outputs.build }}). macOS quarantines downloaded non-notarized apps: open the app once with right-click → Open, or run \`xattr -dr com.apple.quarantine /Applications/SalmanMacCleaner.app\`." \
+            || gh release upload "${{ steps.tag.outputs.tag }}" "dist/$NAME" "dist/checksums.txt" --repo "${{ github.repository }}" --clobber
+
+      - name: Fail loudly if the release is not published
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${{ steps.tag.outputs.tag }}" --repo "${{ github.repository }}" > /dev/null \
+            || { echo "::error::GitHub release creation failed"; exit 1; }

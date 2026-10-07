@@ -25,7 +25,7 @@ public enum AppIdentity {
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "-"
     }
 
-    /// Compact "v1.2.0 (8)" badge used in the toolbar and sidebar header.
+    /// Compact "v1.2.0 (12)" badge used in the toolbar and sidebar header.
     public static var versionBadge: String {
         "v\(shortVersion) (\(buildNumber))"
     }

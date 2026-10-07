@@ -5,6 +5,55 @@ All notable changes to 8002CleanUp are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0 build 12] - 2026-10-07 — restore of the verified 2026-08-27 state
+
+### Restored
+
+- **Full Disk Access works again.** `ENABLE_APP_SANDBOX` is removed from the
+  app and test build configurations and `com.apple.security.app-sandbox` is
+  removed from `SalmanMacCleaner.entitlements`. App Sandbox cannot be combined
+  with full-disk maintenance: while it was enabled the app could not read
+  `~/Library`, other volumes or protected locations, so scans degraded even
+  with Full Disk Access granted. `Tools/validate_project.py` once again fails
+  if the sandbox is switched back on.
+- **Smart Care no longer stalls at 50%.** The application factor of the
+  one-click health check uses the bounded bundle count again instead of the
+  full applications inventory (which measured, signed and metadata-queried
+  every bundle on the machine).
+- **"Back to Smart Care" navigation** restored in Duplicate Finder and in
+  Startup & Background Items.
+- **Compact window layout** restored: 980 × 640 minimum, 1180 × 760 default,
+  compact sidebar width, and the sidebar inset that keeps the first row clear
+  of the macOS title-bar controls.
+- **Trash safety restored.** Permanent deletion and "Empty Trash" again
+  validate every candidate path against the real Trash roots
+  (`~/.Trash` plus per-volume trashes) with a standardised prefix check,
+  instead of matching any path that merely contains the substring `.Trash`.
+  Restore is disabled for entries whose original path is unknown.
+- **Regression tests restored** in `DuplicateFinderTests.swift`,
+  `PathSafetyTests.swift` and `AppIdentityTests.swift` (the earlier compile-fix
+  pass had deleted tests and weakened assertions).
+
+### Fixed
+
+- Release builds are packaged with `ditto -c -k --keepParent` instead of
+  `zip -r`; `zip` follows symlinks and corrupts `.app` bundles.
+- Release builds are ad-hoc signed (`CODE_SIGN_IDENTITY="-"`) so the app can
+  launch on Apple Silicon, with a loud unsigned fallback.
+- CI no longer publishes `v1.0.<run number>` releases from `main` pushes.
+  Release tags now match the product version. The misleading `v1.0.6` /
+  `v1.0.13` release names came from workflow run numbers, not from the app.
+- CI no longer force-commits build logs and API dumps (`build.log`,
+  `test.log`, `run_status*.json`, `jobs*.json`, …) to the repository; those
+  files were deleted and logs are uploaded as workflow artifacts.
+- Stale repository URLs (`8002salman-ai/SalmanMacCleaner`) updated to
+  `salmanbashir80/SalmanMacCleaner`.
+
+### Removed
+
+- `SalmanMacCleaner/Features/TrashBins/TrashValidator.swift` — never added to
+  the Xcode project and not referenced by any code path.
+
 ## [1.2.0] - 2026-08-26
 
 ### Changed

@@ -92,9 +92,14 @@ never faked.
 - **Preview Mode ON by default**; a deliberate, confirmed control exits it.
 - Only user-selected items ever enter a cleanup plan; SAFE items may be
   smart-selected; REVIEW and PROTECTED are never auto-selected.
-- Removal happens exclusively through `FileManager.trashItem`. The app never
-  permanently deletes, never empties the Trash, never uses `sudo`, `rm`,
-  shell commands, `Process`/`NSTask`, `system()`, `popen()` or network calls.
+- Every scanning and cleanup module removes files exclusively through
+  `FileManager.trashItem`. The single exception is the **Trash Bins** module,
+  where you can explicitly confirm *Put Back*, *Delete Immediately* or *Empty
+  Trash* for items that are **already inside a Trash folder**; every candidate
+  path is re-validated against the real Trash roots (`~/.Trash` plus the
+  per-volume trashes) with a standardised prefix check before anything is
+  removed. The app never uses `sudo`, `rm`, shell commands,
+  `Process`/`NSTask`, `system()`, `popen()` or network calls.
 - `/System`, `/Library`, `/private`, `/usr`, `/bin`, `/sbin`, `/Applications`,
   `/Volumes`, `/Network`, `/dev`, `/cores` are hard-blocked; Desktop,
   Documents, Downloads, Pictures, Music and Movies are never scanned by

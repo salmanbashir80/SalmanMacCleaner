@@ -116,7 +116,7 @@ def main() -> int:
     check("PBXNativeTarget" in pbx and pbx.count("isa = PBXNativeTarget") >= 2, "two native targets present", "native targets missing")
     check("MACOSX_DEPLOYMENT_TARGET = 13.0" in pbx, "macOS 13.0 deployment target", "deployment target not 13.0")
     check("SWIFT_VERSION = 5.9" in pbx, "Swift 5.9 language version", "Swift version not 5.9")
-    check("ENABLE_APP_SANDBOX = YES" in pbx, "app sandbox enabled", "app sandbox not enabled")
+    check("ENABLE_APP_SANDBOX = YES" not in pbx, "app sandbox disabled for Full Disk Access build", "app sandbox still enabled")
 
     # 2. Project references resolve to real, non-empty files
     print("\n[2] Project references")
@@ -206,8 +206,6 @@ def main() -> int:
         (r"NWConnection", "Network framework"),
         (r"\bcurl\b", "curl"),
         (r"\bwget\b", "wget"),
-        (r"removeItem\(at.*permanent", "permanent removal"),
-        (r"emptyTrash", "emptyTrash"),
     ]
     section_errors = []
     for path in all_swift:
@@ -221,6 +219,35 @@ def main() -> int:
     for item in section_errors:
         error(item)
     check(not section_errors, "app sources free of forbidden APIs", "forbidden APIs found (see above)")
+
+    # 6b. Destructive APIs are restricted to the Trash Bins module.
+    # Permanent deletion is a first-class feature of that module only: it acts
+    # on entries already located inside a Trash root, after an explicit
+    # confirmation, with every candidate path re-validated against the real
+    # Trash roots. The app's own history/session stores may delete their own
+    # files. Everywhere else, permanent removal stays forbidden.
+    TRASH_MODULE = os.path.join(APP_DIR, "Features", "TrashBins")
+    OWN_STORE_FILES = {"HistoryStore.swift", "ScanSessionStore.swift"}
+    destructive = [
+        (r"\bemptyTrash\w*", "emptyTrash"),
+        # Call sites only (".removeItem("), so the FileManaging protocol
+        # requirement declared in Core/FileUtilities.swift is not flagged.
+        (r"\.removeItem\s*\(", "removeItem()"),
+    ]
+    section_errors = []
+    for path in all_swift:
+        if TEST_DIR in path or TRASH_MODULE in path:
+            continue
+        if os.path.basename(path) in OWN_STORE_FILES:
+            continue
+        with open(path, "r", encoding="utf-8") as handle:
+            content = strip_comments_and_strings(handle.read())
+        for pattern, label in destructive:
+            if re.search(pattern, content):
+                section_errors.append(f"{os.path.relpath(path, ROOT)} contains destructive API {label!r} outside the Trash Bins module")
+    for item in section_errors:
+        error(item)
+    check(not section_errors, "destructive APIs confined to the Trash Bins module", "destructive API used outside the Trash Bins module (see above)")
 
     # 7. Localization keys referenced by views exist in the strings file
     print("\n[7] Localization coverage")

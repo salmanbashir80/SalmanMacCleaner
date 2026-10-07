@@ -12,8 +12,15 @@ primary target.
 - Full Disk Access onboarding flow (user grants access in System Settings;
   the app never grants itself permission)
 - Deepest supported scan with honest coverage reporting
-- App Sandbox remains **enabled** — protected locations are reached through
-  the Full Disk Access grant, not by weakening the sandbox
+- **App Sandbox is disabled for this edition.** App Sandbox cannot be combined
+  with full-disk maintenance: a sandboxed process cannot reach `~/Library`,
+  other volumes or protected locations even when the user grants Full Disk
+  Access, so scans silently degrade. The direct-distribution build therefore
+  ships without `ENABLE_APP_SANDBOX` and without
+  `com.apple.security.app-sandbox`; Hardened Runtime stays **enabled**, and
+  `Tools/validate_project.py` fails the build if the sandbox is switched back
+  on. Protected locations are still only read after the user grants Full Disk
+  Access through the normal TCC flow.
 
 ## Mac App Store (documented alternative — not the implemented target)
 

@@ -1,0 +1,58 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ "main", "arena/*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: |
+        # Use Xcode 15 if available
+        sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+        echo "XCODE VERSION:"
+        xcodebuild -version
+        echo "IOS SDK VERSION:"
+        xcodebuild -showsdks | grep -i "iphoneos" || true
+        echo "MINIMUM DEPLOYMENT TARGET: 16.0"
+
+    - name: List Xcode project
+      run: xcodebuild -project SalmanCleanerMobile.xcodeproj -list
+
+    - name: Build iOS App for Generic Simulator
+      run: |
+        xcodebuild \
+          -project SalmanCleanerMobile.xcodeproj \
+          -scheme SalmanCleanerMobile \
+          -sdk iphonesimulator \
+          -destination 'generic/platform=iOS Simulator' \
+          CODE_SIGNING_ALLOWED=NO \
+          build > build.log 2>&1 || exit 1
+
+    - name: Run Tests on Available Simulator
+      if: success()
+      run: |
+        xcodebuild \
+          -project SalmanCleanerMobile.xcodeproj \
+          -scheme SalmanCleanerMobile \
+          -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+          CODE_SIGNING_ALLOWED=NO \
+          test > test.log 2>&1 || exit 1
+
+    - name: Upload build and test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-ci-logs
+        path: |
+          build.log
+          test.log
+        if-no-files-found: ignore

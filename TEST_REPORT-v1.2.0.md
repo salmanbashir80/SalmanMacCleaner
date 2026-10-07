@@ -1,3 +1,9 @@
+> **Historical document.** This report describes the 2026-08-26 product-rename
+> pass at build 8. The build number was subsequently raised to 12 on the
+> verified line, and the app was restored from that verified state on
+> 2026-10-07 — see `RESTORE_REPORT.md` for the current status, source commits
+> and verification evidence.
+
 # 8002CleanUp v1.2.0 Verification Report
 
 Date: 2026-08-26
