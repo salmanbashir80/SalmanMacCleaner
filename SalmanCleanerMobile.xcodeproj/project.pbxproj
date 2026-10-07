@@ -70,6 +70,11 @@
 		EE000000000000000000000020 /* SalmanCleanerMobile */ = {
 			isa = PBXGroup;
 			children = (
+				EE000000000000000000000001 /* ContentView.swift */,
+				EE000000000000000000000003 /* DuplicatesView.swift */,
+				EE000000000000000000000005 /* LargeMediaView.swift */,
+				EE000000000000000000000007 /* PhotoManager.swift */,
+				EE000000000000000000000009 /* SalmanCleanerMobileApp.swift */,
 				EE000000000000000000000015 /* Info.plist */,
 				EE000000000000000000000016 /* SalmanCleanerMobile.entitlements */,
 				EE000000000000000000000013 /* Assets.xcassets */,
@@ -80,7 +85,7 @@
 		EE000000000000000000000021 /* SalmanCleanerMobileTests */ = {
 			isa = PBXGroup;
 			children = (
-
+				EE000000000000000000000011 /* PhotoManagerTests.swift */,
 			);
 			path = SalmanCleanerMobileTests;
 			sourceTree = "<group>";

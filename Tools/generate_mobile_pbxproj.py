@@ -28,7 +28,8 @@ def collect_swift_files() -> tuple[list[str], list[str]]:
                 dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
                 for name in sorted(filenames):
                     if name.endswith(".swift"):
-                        out.append(os.path.relpath(os.path.join(dirpath, name), ROOT))
+                        rel = os.path.relpath(os.path.join(dirpath, name), ROOT)
+                        out.append(rel.replace("\\", "/"))
     return app_files, test_files
 
 def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
