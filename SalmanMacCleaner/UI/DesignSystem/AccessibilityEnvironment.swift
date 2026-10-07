@@ -36,9 +36,7 @@ public final class AccessibilityEnvironment: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
-                self?.refresh()
-            }
+            self?.refresh()
         })
     }
 

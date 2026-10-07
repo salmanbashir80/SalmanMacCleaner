@@ -309,20 +309,26 @@ struct LargeOldFilesView: View {
                 bytesFound = CleanupAccounting.adding(bytesFound, Int64(size))
                 // Throttled live counters so the UI never floods the main actor.
                 if entriesVisited % 250 == 0 {
+                    let v = entriesVisited
+                    let b = bytesFound
                     await MainActor.run {
                         guard scanToken == token else { return }
-                        scanVisited = entriesVisited
-                        scanBytes = bytesFound
+                        scanVisited = v
+                        scanBytes = b
                     }
                 }
             }
             let wasCancelled = Task.isCancelled
+            let finalItems = wasCancelled ? [] : Array(found.prefix(800))
+            let finalCoverage = (coverage.count > 0) || wasCancelled
+            let finalVisited = entriesVisited
+            let finalBytes = bytesFound
             await MainActor.run {
                 guard scanToken == token else { return }
-                items = wasCancelled ? [] : Array(found.prefix(800))
-                scanWasPartial = (coverage.count > 0) || wasCancelled
-                scanVisited = entriesVisited
-                scanBytes = bytesFound
+                items = finalItems
+                scanWasPartial = finalCoverage
+                scanVisited = finalVisited
+                scanBytes = finalBytes
                 stopHeartbeat()
                 isScanning = false
                 scanTask = nil

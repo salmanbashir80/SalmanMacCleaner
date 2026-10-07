@@ -264,10 +264,12 @@ struct MyClutterView: View {
             }
             found.sort { $0.size > $1.size }
             let wasCancelled = Task.isCancelled
+            let finalItems = wasCancelled ? [] : Array(found.prefix(500))
+            let finalCoverage = (coverage.count > 0) || wasCancelled
             await MainActor.run {
                 guard scanToken == token else { return }
-                items = wasCancelled ? [] : Array(found.prefix(500))
-                scanWasPartial = (coverage.count > 0) || wasCancelled
+                items = finalItems
+                scanWasPartial = finalCoverage
                 isScanning = false
                 scanTask = nil
             }

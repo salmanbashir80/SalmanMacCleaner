@@ -52,8 +52,8 @@ public struct ModuleArtwork: View {
                     let angle = Double(module.artworkSeed) * 0.61 + Double(index) * (2 * .pi / Double(max(satellites.count, 1)))
                     let orbit = radius * 1.18
                     let position = CGPoint(
-                        x: center.x + cos(angle) * orbit,
-                        y: center.y + sin(angle) * orbit
+                        x: center.x + CGFloat(Foundation.cos(angle)) * orbit,
+                        y: center.y + CGFloat(Foundation.sin(angle)) * orbit
                     )
                     let glyphSize = size * 0.055
                     var resolvedContext = context
