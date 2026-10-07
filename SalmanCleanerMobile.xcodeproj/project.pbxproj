@@ -9,11 +9,12 @@
 /* Begin PBXBuildFile section */
 		EE000000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000001 /* ContentView.swift */; };
 		EE000000000000000000000004 /* DuplicatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000003 /* DuplicatesView.swift */; };
-		EE000000000000000000000006 /* LargeMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000005 /* LargeMediaView.swift */; };
-		EE000000000000000000000008 /* PhotoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000007 /* PhotoManager.swift */; };
-		EE000000000000000000000010 /* SalmanCleanerMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000009 /* SalmanCleanerMobileApp.swift */; };
-		EE000000000000000000000012 /* PhotoManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000011 /* PhotoManagerTests.swift */; };
-		EE000000000000000000000014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000013 /* Assets.xcassets */; };
+		EE000000000000000000000006 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000005 /* FileBrowserView.swift */; };
+		EE000000000000000000000008 /* LargeMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000007 /* LargeMediaView.swift */; };
+		EE000000000000000000000010 /* PhotoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000009 /* PhotoManager.swift */; };
+		EE000000000000000000000012 /* SalmanCleanerMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000011 /* SalmanCleanerMobileApp.swift */; };
+		EE000000000000000000000014 /* PhotoManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000013 /* PhotoManagerTests.swift */; };
+		EE000000000000000000000016 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000015 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,15 +30,16 @@
 /* Begin PBXFileReference section */
 		EE000000000000000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EE000000000000000000000003 /* DuplicatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicatesView.swift; sourceTree = "<group>"; };
-		EE000000000000000000000005 /* LargeMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeMediaView.swift; sourceTree = "<group>"; };
-		EE000000000000000000000007 /* PhotoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManager.swift; sourceTree = "<group>"; };
-		EE000000000000000000000009 /* SalmanCleanerMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalmanCleanerMobileApp.swift; sourceTree = "<group>"; };
-		EE000000000000000000000011 /* PhotoManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManagerTests.swift; sourceTree = "<group>"; };
-		EE000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		EE000000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		EE000000000000000000000016 /* SalmanCleanerMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SalmanCleanerMobile.entitlements; sourceTree = "<group>"; };
-		EE000000000000000000000017 /* SalmanCleanerMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SalmanCleanerMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		EE000000000000000000000018 /* SalmanCleanerMobileTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalmanCleanerMobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE000000000000000000000005 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
+		EE000000000000000000000007 /* LargeMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeMediaView.swift; sourceTree = "<group>"; };
+		EE000000000000000000000009 /* PhotoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManager.swift; sourceTree = "<group>"; };
+		EE000000000000000000000011 /* SalmanCleanerMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalmanCleanerMobileApp.swift; sourceTree = "<group>"; };
+		EE000000000000000000000013 /* PhotoManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManagerTests.swift; sourceTree = "<group>"; };
+		EE000000000000000000000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		EE000000000000000000000017 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EE000000000000000000000018 /* SalmanCleanerMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SalmanCleanerMobile.entitlements; sourceTree = "<group>"; };
+		EE000000000000000000000019 /* SalmanCleanerMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SalmanCleanerMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE000000000000000000000020 /* SalmanCleanerMobileTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalmanCleanerMobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,43 +60,44 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		EE000000000000000000000019 = {
+		EE000000000000000000000021 = {
 			isa = PBXGroup;
 			children = (
-				EE000000000000000000000020 /* SalmanCleanerMobile */,
-				EE000000000000000000000021 /* SalmanCleanerMobileTests */,
-				EE000000000000000000000022 /* Products */,
+				EE000000000000000000000022 /* SalmanCleanerMobile */,
+				EE000000000000000000000023 /* SalmanCleanerMobileTests */,
+				EE000000000000000000000024 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		EE000000000000000000000020 /* SalmanCleanerMobile */ = {
+		EE000000000000000000000022 /* SalmanCleanerMobile */ = {
 			isa = PBXGroup;
 			children = (
 				EE000000000000000000000001 /* ContentView.swift */,
 				EE000000000000000000000003 /* DuplicatesView.swift */,
-				EE000000000000000000000005 /* LargeMediaView.swift */,
-				EE000000000000000000000007 /* PhotoManager.swift */,
-				EE000000000000000000000009 /* SalmanCleanerMobileApp.swift */,
-				EE000000000000000000000015 /* Info.plist */,
-				EE000000000000000000000016 /* SalmanCleanerMobile.entitlements */,
-				EE000000000000000000000013 /* Assets.xcassets */,
+				EE000000000000000000000005 /* FileBrowserView.swift */,
+				EE000000000000000000000007 /* LargeMediaView.swift */,
+				EE000000000000000000000009 /* PhotoManager.swift */,
+				EE000000000000000000000011 /* SalmanCleanerMobileApp.swift */,
+				EE000000000000000000000017 /* Info.plist */,
+				EE000000000000000000000018 /* SalmanCleanerMobile.entitlements */,
+				EE000000000000000000000015 /* Assets.xcassets */,
 			);
 			path = SalmanCleanerMobile;
 			sourceTree = "<group>";
 		};
-		EE000000000000000000000021 /* SalmanCleanerMobileTests */ = {
+		EE000000000000000000000023 /* SalmanCleanerMobileTests */ = {
 			isa = PBXGroup;
 			children = (
-				EE000000000000000000000011 /* PhotoManagerTests.swift */,
+				EE000000000000000000000013 /* PhotoManagerTests.swift */,
 			);
 			path = SalmanCleanerMobileTests;
 			sourceTree = "<group>";
 		};
-		EE000000000000000000000022 /* Products */ = {
+		EE000000000000000000000024 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				EE000000000000000000000017 /* SalmanCleanerMobile.app */,
-				EE000000000000000000000018 /* SalmanCleanerMobileTests.xctest */,
+				EE000000000000000000000019 /* SalmanCleanerMobile.app */,
+				EE000000000000000000000020 /* SalmanCleanerMobileTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -116,7 +119,7 @@
 			);
 			name = SalmanCleanerMobile;
 			productName = SalmanCleanerMobile;
-			productReference = EE000000000000000000000017 /* SalmanCleanerMobile.app */;
+			productReference = EE000000000000000000000019 /* SalmanCleanerMobile.app */;
 			productType = "com.apple.product-type.application";
 		};
 		600000000000000000000003 /* SalmanCleanerMobileTests */ = {
@@ -134,7 +137,7 @@
 			);
 			name = SalmanCleanerMobileTests;
 			productName = SalmanCleanerMobileTests;
-			productReference = EE000000000000000000000018 /* SalmanCleanerMobileTests.xctest */;
+			productReference = EE000000000000000000000020 /* SalmanCleanerMobileTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -164,8 +167,8 @@
 				en,
 				Base,
 			);
-			mainGroup = EE000000000000000000000019;
-			productRefGroup = EE000000000000000000000022 /* Products */;
+			mainGroup = EE000000000000000000000021;
+			productRefGroup = EE000000000000000000000024 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -180,7 +183,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE000000000000000000000014 /* Assets.xcassets in Resources */,
+				EE000000000000000000000016 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,9 +221,10 @@
 			files = (
 				EE000000000000000000000002 /* ContentView.swift in Sources */,
 				EE000000000000000000000004 /* DuplicatesView.swift in Sources */,
-				EE000000000000000000000006 /* LargeMediaView.swift in Sources */,
-				EE000000000000000000000008 /* PhotoManager.swift in Sources */,
-				EE000000000000000000000010 /* SalmanCleanerMobileApp.swift in Sources */,
+				EE000000000000000000000006 /* FileBrowserView.swift in Sources */,
+				EE000000000000000000000008 /* LargeMediaView.swift in Sources */,
+				EE000000000000000000000010 /* PhotoManager.swift in Sources */,
+				EE000000000000000000000012 /* SalmanCleanerMobileApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,7 +232,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE000000000000000000000012 /* PhotoManagerTests.swift in Sources */,
+				EE000000000000000000000014 /* PhotoManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

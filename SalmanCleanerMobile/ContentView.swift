@@ -82,6 +82,17 @@ struct DashboardView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                
+                NavigationLink(destination: FileBrowserView()) {
+                    HStack {
+                        Image(systemName: "folder")
+                            .foregroundColor(.purple)
+                        Text("Manage Files")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
         }
     }
