@@ -30,13 +30,18 @@ jobs:
       run: xcodebuild -resolvePackageDependencies -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner
 
     - name: Run Unit Tests
-      run: xcodebuild test -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleanerTests -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
+      run: |
+        set -o pipefail
+        xcodebuild test -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
 
     - name: Build Debug
-      run: xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
+      run: |
+        set -o pipefail
+        xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
 
     - name: Build Release (Unsigned)
       run: |
+        set -o pipefail
         xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -configuration Release -destination 'platform=macOS' -derivedDataPath build_mac CODE_SIGNING_ALLOWED=NO | xcpretty
         
     - name: Package Mac Application
