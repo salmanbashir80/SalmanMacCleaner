@@ -13,17 +13,36 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Select Xcode
-      run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      run: |
+        # Use Xcode 15 if available
+        sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+        echo "XCODE VERSION:"
+        xcodebuild -version
+        echo "IOS SDK VERSION:"
+        xcodebuild -showsdks | grep -i "iphoneos" || true
+        echo "MINIMUM DEPLOYMENT TARGET: 16.0"
 
     - name: List Xcode project
       run: xcodebuild -project SalmanCleanerMobile.xcodeproj -list
 
-    - name: Build iOS App
+    - name: Build iOS App for Generic Simulator
       run: |
         xcodebuild \
           -project SalmanCleanerMobile.xcodeproj \
           -scheme SalmanCleanerMobile \
-          -configuration Debug \
-          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+          -sdk iphonesimulator \
+          -destination 'generic/platform=iOS Simulator' \
           CODE_SIGNING_ALLOWED=NO \
           build
+
+    - name: Run Tests on Available Simulator
+      run: |
+        # Find first available iPhone simulator
+        SIMULATOR=$(xcrun simctl list devices available | grep -i "iPhone" | head -1 | grep -o -E "iPhone [a-zA-Z0-9 ]+" || echo "iPhone 15")
+        echo "Using simulator: $SIMULATOR"
+        xcodebuild \
+          -project SalmanCleanerMobile.xcodeproj \
+          -scheme SalmanCleanerMobile \
+          -destination "platform=iOS Simulator,name=$SIMULATOR" \
+          CODE_SIGNING_ALLOWED=NO \
+          test

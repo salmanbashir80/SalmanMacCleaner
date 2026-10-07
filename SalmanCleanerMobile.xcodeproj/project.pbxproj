@@ -8,17 +8,36 @@
 
 /* Begin PBXBuildFile section */
 		EE000000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000001 /* ContentView.swift */; };
-		EE000000000000000000000004 /* SalmanCleanerMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000003 /* SalmanCleanerMobileApp.swift */; };
-		EE000000000000000000000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000005 /* Assets.xcassets */; };
+		EE000000000000000000000004 /* DuplicatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000003 /* DuplicatesView.swift */; };
+		EE000000000000000000000006 /* LargeMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000005 /* LargeMediaView.swift */; };
+		EE000000000000000000000008 /* PhotoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000007 /* PhotoManager.swift */; };
+		EE000000000000000000000010 /* SalmanCleanerMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000009 /* SalmanCleanerMobileApp.swift */; };
+		EE000000000000000000000012 /* PhotoManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000011 /* PhotoManagerTests.swift */; };
+		EE000000000000000000000014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000013 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		200000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 600000000000000000000002;
+			remoteInfo = SalmanCleanerMobile;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		EE000000000000000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		EE000000000000000000000003 /* SalmanCleanerMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalmanCleanerMobileApp.swift; sourceTree = "<group>"; };
-		EE000000000000000000000005 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		EE000000000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		EE000000000000000000000008 /* SalmanCleanerMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SalmanCleanerMobile.entitlements; sourceTree = "<group>"; };
-		EE000000000000000000000009 /* SalmanCleanerMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SalmanCleanerMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE000000000000000000000003 /* DuplicatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicatesView.swift; sourceTree = "<group>"; };
+		EE000000000000000000000005 /* LargeMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeMediaView.swift; sourceTree = "<group>"; };
+		EE000000000000000000000007 /* PhotoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManager.swift; sourceTree = "<group>"; };
+		EE000000000000000000000009 /* SalmanCleanerMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalmanCleanerMobileApp.swift; sourceTree = "<group>"; };
+		EE000000000000000000000011 /* PhotoManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManagerTests.swift; sourceTree = "<group>"; };
+		EE000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		EE000000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EE000000000000000000000016 /* SalmanCleanerMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SalmanCleanerMobile.entitlements; sourceTree = "<group>"; };
+		EE000000000000000000000017 /* SalmanCleanerMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SalmanCleanerMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE000000000000000000000018 /* SalmanCleanerMobileTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalmanCleanerMobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,33 +48,52 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		500000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		EE000000000000000000000010 = {
+		EE000000000000000000000019 = {
 			isa = PBXGroup;
 			children = (
-				EE000000000000000000000011 /* SalmanCleanerMobile */,
-				EE000000000000000000000012 /* Products */,
+				EE000000000000000000000020 /* SalmanCleanerMobile */,
+				EE000000000000000000000021 /* SalmanCleanerMobileTests */,
+				EE000000000000000000000022 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-\t\tEE000000000000000000000011 /* SalmanCleanerMobile */ = {
-\t\t\tisa = PBXGroup;
-\t\t\tchildren = (
-\t\t\t\tEE000000000000000000000007 /* Info.plist */,\n\t\t\t\tEE000000000000000000000008 /* SalmanCleanerMobile.entitlements */,\n\t\t\t\tEE000000000000000000000005 /* Assets.xcassets */,
-\t\t\t);
-\t\t\tpath = SalmanCleanerMobile;
-\t\t\tsourceTree = \"<group>\";
-\t\t};
-\t\tEE000000000000000000000012 /* Products */ = {
-\t\t\tisa = PBXGroup;
-\t\t\tchildren = (
-\t\t\t\tEE000000000000000000000009 /* SalmanCleanerMobile.app */,
-\t\t\t);
-\t\t\tpath = None;
-\t\t\tsourceTree = \"<group>\";
-\t\t};
+		EE000000000000000000000020 /* SalmanCleanerMobile */ = {
+			isa = PBXGroup;
+			children = (
+				EE000000000000000000000015 /* Info.plist */,
+				EE000000000000000000000016 /* SalmanCleanerMobile.entitlements */,
+				EE000000000000000000000013 /* Assets.xcassets */,
+			);
+			path = SalmanCleanerMobile;
+			sourceTree = "<group>";
+		};
+		EE000000000000000000000021 /* SalmanCleanerMobileTests */ = {
+			isa = PBXGroup;
+			children = (
+
+			);
+			path = SalmanCleanerMobileTests;
+			sourceTree = "<group>";
+		};
+		EE000000000000000000000022 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE000000000000000000000017 /* SalmanCleanerMobile.app */,
+				EE000000000000000000000018 /* SalmanCleanerMobileTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -73,8 +111,26 @@
 			);
 			name = SalmanCleanerMobile;
 			productName = SalmanCleanerMobile;
-			productReference = EE000000000000000000000009 /* SalmanCleanerMobile.app */;
+			productReference = EE000000000000000000000017 /* SalmanCleanerMobile.app */;
 			productType = "com.apple.product-type.application";
+		};
+		600000000000000000000003 /* SalmanCleanerMobileTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 800000000000000000000003 /* Build configuration list for PBXNativeTarget "SalmanCleanerMobileTests" */;
+			buildPhases = (
+				500000000000000000000004 /* Sources */,
+				500000000000000000000002 /* Frameworks */,
+				500000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				700000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = SalmanCleanerMobileTests;
+			productName = SalmanCleanerMobileTests;
+			productReference = EE000000000000000000000018 /* SalmanCleanerMobileTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -89,6 +145,10 @@
 					600000000000000000000002 = {
 						CreatedOnToolsVersion = 15.0;
 					};
+					600000000000000000000003 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 600000000000000000000002;
+					};
 				};
 			};
 			buildConfigurationList = 800000000000000000000001 /* Build configuration list for PBXProject "SalmanCleanerMobile" */;
@@ -99,12 +159,13 @@
 				en,
 				Base,
 			);
-			mainGroup = EE000000000000000000000010;
-			productRefGroup = EE000000000000000000000012 /* Products */;
+			mainGroup = EE000000000000000000000019;
+			productRefGroup = EE000000000000000000000022 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				600000000000000000000002 /* SalmanCleanerMobile */,
+				600000000000000000000003 /* SalmanCleanerMobileTests */,
 			);
 		};
 /* End PBXProject section */
@@ -114,7 +175,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE000000000000000000000006 /* Assets.xcassets in Resources */,
+				EE000000000000000000000014 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		500000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +193,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-\t\t\t\tEE000000000000000000000002 /* ContentView.swift in Sources */,\n\t\t\t\tEE000000000000000000000004 /* SalmanCleanerMobileApp.swift in Sources */,
+				EE000000000000000000000002 /* ContentView.swift in Sources */,
+				EE000000000000000000000004 /* DuplicatesView.swift in Sources */,
+				EE000000000000000000000006 /* LargeMediaView.swift in Sources */,
+				EE000000000000000000000008 /* PhotoManager.swift in Sources */,
+				EE000000000000000000000010 /* SalmanCleanerMobileApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		500000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE000000000000000000000012 /* PhotoManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,6 +381,44 @@
 			};
 			name = Release;
 		};
+		A00000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.salman.SalmanCleanerMobileTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SalmanCleanerMobile.app/SalmanCleanerMobile";
+			};
+			name = Debug;
+		};
+		A00000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.salman.SalmanCleanerMobileTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SalmanCleanerMobile.app/SalmanCleanerMobile";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -318,6 +436,15 @@
 			buildConfigurations = (
 				A00000000000000000000003 /* Debug */,
 				A00000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		800000000000000000000003 /* Build configuration list for PBXNativeTarget "SalmanCleanerMobileTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000005 /* Debug */,
+				A00000000000000000000006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

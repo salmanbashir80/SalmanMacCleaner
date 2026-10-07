@@ -4,11 +4,13 @@ import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DIR = os.path.join(ROOT, "SalmanCleanerMobile")
+TEST_DIR = os.path.join(ROOT, "SalmanCleanerMobileTests")
 PROJECT_DIR = os.path.join(ROOT, "SalmanCleanerMobile.xcodeproj")
 PBXPROJ = os.path.join(PROJECT_DIR, "project.pbxproj")
 
 PROJECT_ID = "600000000000000000000001"
 APP_TARGET_ID = "600000000000000000000002"
+TEST_TARGET_ID = "600000000000000000000003"
 
 IGNORE_DIRS = {"en.lproj", "Assets.xcassets", "xcuserdata"}
 RESOURCE_FILES = {"Assets.xcassets"}
@@ -17,16 +19,19 @@ def next_id(counter: list) -> str:
     counter[0] += 1
     return f"EE{counter[0]:024d}"
 
-def collect_swift_files() -> list[str]:
+def collect_swift_files() -> tuple[list[str], list[str]]:
     app_files: list[str] = []
-    for dirpath, dirnames, filenames in os.walk(APP_DIR):
-        dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
-        for name in sorted(filenames):
-            if name.endswith(".swift"):
-                app_files.append(os.path.relpath(os.path.join(dirpath, name), ROOT))
-    return app_files
+    test_files: list[str] = []
+    for base, out in ((APP_DIR, app_files), (TEST_DIR, test_files)):
+        if os.path.exists(base):
+            for dirpath, dirnames, filenames in os.walk(base):
+                dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
+                for name in sorted(filenames):
+                    if name.endswith(".swift"):
+                        out.append(os.path.relpath(os.path.join(dirpath, name), ROOT))
+    return app_files, test_files
 
-def build_pbxproj(app_files: list[str]) -> str:
+def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
     counter = [0]
     file_refs: dict[str, str] = {}
     build_files: dict[str, str] = {}
@@ -34,7 +39,7 @@ def build_pbxproj(app_files: list[str]) -> str:
 
     fr_entries: list[str] = []
     bf_entries: list[str] = []
-    for rel in app_files:
+    for rel in app_files + test_files:
         fr = next_id(counter)
         bf = next_id(counter)
         file_refs[rel] = fr
@@ -53,7 +58,9 @@ def build_pbxproj(app_files: list[str]) -> str:
     fr_entries.append(f'\t\t{entitlements_fr} /* SalmanCleanerMobile.entitlements */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SalmanCleanerMobile.entitlements; sourceTree = "<group>"; }};')
 
     app_product_fr = next_id(counter)
+    test_product_fr = next_id(counter)
     fr_entries.append(f'\t\t{app_product_fr} /* SalmanCleanerMobile.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SalmanCleanerMobile.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
+    fr_entries.append(f'\t\t{test_product_fr} /* SalmanCleanerMobileTests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalmanCleanerMobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};')
 
     def group_id(key: str) -> str:
         if key not in groups:
@@ -63,7 +70,7 @@ def build_pbxproj(app_files: list[str]) -> str:
     def group_children(rel_dir: str) -> list[str]:
         children: list[str] = []
         subdirs: dict[str, str] = {}
-        for rel in app_files:
+        for rel in app_files + test_files:
             if not rel.startswith(rel_dir):
                 continue
             rest = rel[len(rel_dir):].lstrip("/")
@@ -78,17 +85,18 @@ def build_pbxproj(app_files: list[str]) -> str:
 
     def group_entry(key: str, name: str, path: str, children: list[str]) -> str:
         gid = group_id(key)
-        child_lines = "\\n".join(f"\\t\\t\\t\\t{child}," for child in children)
-        path_str = f"path = {path};" if path else "path = None;"
-        return f"\\t\\t{gid} /* {name} */ = {{\n\\t\\t\\tisa = PBXGroup;\n\\t\\t\\tchildren = (\n{child_lines}\n\\t\\t\\t);\n\\t\\t\\t{path_str}\n\\t\\t\\tsourceTree = \\\"<group>\\\";\n\\t\\t}};"
+        child_lines = "\n".join(f"\t\t\t\t{child}," for child in children)
+        path_str = f"\t\t\tpath = {path};\n" if path else ""
+        return f"\t\t{gid} /* {name} */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n{child_lines}\n\t\t\t);\n{path_str}\t\t\tsourceTree = \"<group>\";\n\t\t}};"
 
     root_gid = next_id(counter)
     app_group_gid = group_id("SalmanCleanerMobile")
+    test_group_gid = group_id("SalmanCleanerMobileTests")
     products_gid = group_id("Products")
 
     subgroup_entries: list[str] = []
     subdir_set = set()
-    for rel in app_files:
+    for rel in app_files + test_files:
         parts = rel.split("/")
         for depth in range(2, len(parts)):
             subdir_set.add("/".join(parts[:depth]))
@@ -106,19 +114,30 @@ def build_pbxproj(app_files: list[str]) -> str:
     app_children.append(f'{entitlements_fr} /* SalmanCleanerMobile.entitlements */')
     app_children.append(f'{assets_fr} /* Assets.xcassets */')
     for sub in sorted(subdir_set):
-        if sub.count("/") == 1:
+        if sub.count("/") == 1 and sub.startswith("SalmanCleanerMobile/"):
             app_children.append(f'{group_id(sub)} /* {sub.split("/")[-1]} */')
+
+    test_children: list[str] = []
+    for rel in test_files:
+        parts = rel.split("/")
+        if len(parts) == 2:
+            test_children.append(f'{file_refs[rel]} /* {os.path.basename(rel)} */')
+    for sub in sorted(subdir_set):
+        if sub.count("/") == 1 and sub.startswith("SalmanCleanerMobileTests/"):
+            test_children.append(f'{group_id(sub)} /* {sub.split("/")[-1]} */')
 
     group_entries = [
         group_entry("SalmanCleanerMobile", "SalmanCleanerMobile", "SalmanCleanerMobile", app_children),
-        group_entry("Products", "Products", None, [f'{app_product_fr} /* SalmanCleanerMobile.app */']),
+        group_entry("SalmanCleanerMobileTests", "SalmanCleanerMobileTests", "SalmanCleanerMobileTests", test_children),
+        group_entry("Products", "Products", None, [f'{app_product_fr} /* SalmanCleanerMobile.app */', f'{test_product_fr} /* SalmanCleanerMobileTests.xctest */']),
     ]
-    group_entries[1] = group_entries[1].replace('\\t\\t\\tpath = None;\\n', '').replace(
-        'sourceTree = "<group>";', 'name = Products;\n\\t\\t\\tsourceTree = "<group>";'
+    group_entries[2] = group_entries[2].replace(
+        'sourceTree = "<group>";', 'name = Products;\n\t\t\tsourceTree = "<group>";'
     )
     group_entries.extend(subgroup_entries)
 
-    app_sources = "\\n".join(f'\\t\\t\\t\\t{build_files[rel]} /* {os.path.basename(rel)} in Sources */,' for rel in app_files)
+    app_sources = "\n".join(f'\t\t\t\t{build_files[rel]} /* {os.path.basename(rel)} in Sources */,' for rel in app_files)
+    test_sources = "\n".join(f'\t\t\t\t{build_files[rel]} /* {os.path.basename(rel)} in Sources */,' for rel in test_files)
 
     pbx = f"""// !$*UTF8*$!
 {{
@@ -132,12 +151,29 @@ def build_pbxproj(app_files: list[str]) -> str:
 {chr(10).join(bf_entries)}
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		200000000000000000000001 /* PBXContainerItemProxy */ = {{
+			isa = PBXContainerItemProxy;
+			containerPortal = {PROJECT_ID} /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = {APP_TARGET_ID};
+			remoteInfo = SalmanCleanerMobile;
+		}};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 {chr(10).join(fr_entries)}
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		500000000000000000000001 /* Frameworks */ = {{
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		}};
+		500000000000000000000002 /* Frameworks */ = {{
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -151,6 +187,7 @@ def build_pbxproj(app_files: list[str]) -> str:
 			isa = PBXGroup;
 			children = (
 				{app_group_gid} /* SalmanCleanerMobile */,
+				{test_group_gid} /* SalmanCleanerMobileTests */,
 				{products_gid} /* Products */,
 			);
 			sourceTree = "<group>";
@@ -176,6 +213,24 @@ def build_pbxproj(app_files: list[str]) -> str:
 			productReference = {app_product_fr} /* SalmanCleanerMobile.app */;
 			productType = "com.apple.product-type.application";
 		}};
+		{TEST_TARGET_ID} /* SalmanCleanerMobileTests */ = {{
+			isa = PBXNativeTarget;
+			buildConfigurationList = 800000000000000000000003 /* Build configuration list for PBXNativeTarget "SalmanCleanerMobileTests" */;
+			buildPhases = (
+				500000000000000000000004 /* Sources */,
+				500000000000000000000002 /* Frameworks */,
+				500000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				700000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = SalmanCleanerMobileTests;
+			productName = SalmanCleanerMobileTests;
+			productReference = {test_product_fr} /* SalmanCleanerMobileTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		}};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -188,6 +243,10 @@ def build_pbxproj(app_files: list[str]) -> str:
 				TargetAttributes = {{
 					{APP_TARGET_ID} = {{
 						CreatedOnToolsVersion = 15.0;
+					}};
+					{TEST_TARGET_ID} = {{
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = {APP_TARGET_ID};
 					}};
 				}};
 			}};
@@ -205,6 +264,7 @@ def build_pbxproj(app_files: list[str]) -> str:
 			projectRoot = "";
 			targets = (
 				{APP_TARGET_ID} /* SalmanCleanerMobile */,
+				{TEST_TARGET_ID} /* SalmanCleanerMobileTests */,
 			);
 		}};
 /* End PBXProject section */
@@ -218,6 +278,13 @@ def build_pbxproj(app_files: list[str]) -> str:
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		}};
+		500000000000000000000006 /* Resources */ = {{
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		}};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -226,6 +293,14 @@ def build_pbxproj(app_files: list[str]) -> str:
 			buildActionMask = 2147483647;
 			files = (
 {app_sources}
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		}};
+		500000000000000000000004 /* Sources */ = {{
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+{test_sources}
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		}};
@@ -401,6 +476,44 @@ def build_pbxproj(app_files: list[str]) -> str:
 			}};
 			name = Release;
 		}};
+		A00000000000000000000005 /* Debug */ = {{
+			isa = XCBuildConfiguration;
+			buildSettings = {{
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.salman.SalmanCleanerMobileTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SalmanCleanerMobile.app/SalmanCleanerMobile";
+			}};
+			name = Debug;
+		}};
+		A00000000000000000000006 /* Release */ = {{
+			isa = XCBuildConfiguration;
+			buildSettings = {{
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.salman.SalmanCleanerMobileTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SalmanCleanerMobile.app/SalmanCleanerMobile";
+			}};
+			name = Release;
+		}};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -422,6 +535,15 @@ def build_pbxproj(app_files: list[str]) -> str:
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		}};
+		800000000000000000000003 /* Build configuration list for PBXNativeTarget "SalmanCleanerMobileTests" */ = {{
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000005 /* Debug */,
+				A00000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		}};
 /* End XCConfigurationList section */
 	}};
 	rootObject = {PROJECT_ID} /* Project object */;
@@ -430,8 +552,8 @@ def build_pbxproj(app_files: list[str]) -> str:
     return pbx
 
 def main():
-    app_files = collect_swift_files()
-    pbx = build_pbxproj(app_files)
+    app_files, test_files = collect_swift_files()
+    pbx = build_pbxproj(app_files, test_files)
     os.makedirs(PROJECT_DIR, exist_ok=True)
     with open(PBXPROJ, "w", encoding="utf-8") as f:
         f.write(pbx)
