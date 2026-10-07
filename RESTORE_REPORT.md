@@ -1,7 +1,9 @@
 # 8002CleanUp — restoration report (release v1.0.13 → verified 2026-08-27 state)
 
 Date: 2026-10-07
-Restore commit: `d8521594e63db726a6521b724700add4afa1e8ac`
+Restore commit: `5e67e54` (branch `arena/1e501ddc-salmanmaccleaner`); the earlier working
+restore commit `d852159` was squash-rewritten into it so the branch could be pushed without
+`.github/workflows/` changes (see Option C, "Push constraint").
 Branch: `arena/1e501ddc-salmanmaccleaner` (based on `main` @ `63e9c9c4e594560a214d3aba1129b8d0c7586db6`)
 Environment used for the work: Linux (Debian 12, x86_64), Python 3.11 — **no macOS, no Xcode, no Swift toolchain**.
 
@@ -86,7 +88,7 @@ Additionally fixed in this pass (defects present in the released state):
 
 ---
 
-## 4. Files changed (43 files; `git diff --stat 63e9c9c d852159` = 1046 insertions, 1942 deletions)
+## 4. Files changed (41 files; `git diff --shortstat 63e9c9c 5e67e54` = 1079 insertions, 1868 deletions)
 
 Application code restored from `0e990e1`:
 
@@ -114,10 +116,12 @@ Tools/validate_project.py                      sandbox assertion restored; destr
 SalmanMacCleaner/en.lproj/Localizable.strings  10 missing keys added; Trash warning copy corrected
 SalmanMacCleaner/Core/AppIdentity.swift        version-badge doc comment
 SalmanMacCleaner/Features/TrashBins/TrashBinsView.swift  dead "Search" button (empty action) removed
-.github/workflows/ci.yml                       ad-hoc signing, ditto packaging, no auto-release, artifact logs
-.github/workflows/release.yml                  real version from project, ad-hoc, ditto, checksum, release
-.github/workflows/ios-ci.yml                   no more branch-pushing log dumps
-Support/workflows/ci.yml                       mirror of the active CI workflow
+Support/workflows/ci.yml                    FIXED CI workflow (ad-hoc signing, ditto packaging,
+                                            no auto-release from main pushes, artifact logs)
+Support/workflows/release-unsigned.yml (new)  FIXED tag-release workflow (real product version,
+                                            ditto packaging, SHA-256, no secrets needed)
+Support/workflows/ios-ci.yml (new)          FIXED iOS workflow (no branch-pushing log dumps)
+Scripts/activate_workflows.sh (new)         copies the templates into .github/workflows/
 .gitignore                                     dist/, *.log, packaged ZIP names
 CHANGELOG.md, README.md, SECURITY.md           accurate Trash/sandbox policy; restore entry
 Docs/Distribution.md, Docs/ReleaseWorkflow.md  sandbox rationale; CI/release documentation
@@ -218,9 +222,17 @@ The bundle is `SalmanMacCleaner.app` while the visible name is **8002CleanUp**.
 
 ### Option C — let GitHub's macOS runners do it (real compile + test evidence)
 
+The workflow files ship under `Support/workflows/` **and** are already placed in
+`.github/workflows/` inside the delivered ZIP. Push the extracted ZIP (or run the activation
+script on an existing clone), then trigger the run:
+
 ```bash
-git push origin arena/1e501ddc-salmanmaccleaner
-gh workflow run CI --repo salmanbashir80/SalmanMacCleaner --ref arena/1e501ddc-salmanmaccleaner
+./Scripts/activate_workflows.sh          # only needed when working from a clone
+git add .github/workflows Support/workflows
+git commit -m "ci: activate the restored workflows"
+git push origin main
+
+gh workflow run CI --repo salmanbashir80/SalmanMacCleaner --ref main
 gh run watch --repo salmanbashir80/SalmanMacCleaner
 ```
 
@@ -228,6 +240,13 @@ The updated `ci.yml` runs the validator, the tree-sitter parse, the XCTest suite
 build on `macos-14`, then uploads the packaged `.app` + checksum as a build artifact. That run is
 the authoritative compile/test evidence and the fastest way to obtain a launchable `.app` without
 a local Mac.
+
+> **Push constraint (measured, not assumed).** The automation identity used to prepare these
+> commits may not write `.github/workflows/`: `git push` was rejected with
+> `refusing to allow a GitHub App to create or update workflow '.github/workflows/ci.yml' without
+> 'workflows' permission`. The pushed branch therefore contains the workflow templates only under
+> `Support/workflows/`, while the ZIP contains them activated in both locations. The repository
+> owner (or a PAT with the `workflow` scope) can push them in one command.
 
 ---
 
@@ -245,5 +264,9 @@ a local Mac.
    generator was updated in parallel; do not regenerate without reconciling.
 4. **Signed distribution** needs the six secrets listed in `Docs/ReleaseWorkflow.md`; until then
    releases are ad-hoc/unsigned and macOS shows the standard first-launch prompt.
-5. **`v1.0.6` / `v1.0.13` releases** remain on GitHub with misnamed tags; they were produced by the
+5. **Workflow activation.** `.github/workflows/` cannot be written by the automation token used
+   for these commits (GitHub rejected the push; see Option C). The fixed workflows are committed
+   under `Support/workflows/` and are present, activated, in the delivered ZIP;
+   `./Scripts/activate_workflows.sh` performs the copy and the owner pushes it.
+6. **`v1.0.6` / `v1.0.13` releases** remain on GitHub with misnamed tags; they were produced by the
    removed run-number logic. Deleting them (or re-tagging `v1.2.0`) is a repository-owner action.

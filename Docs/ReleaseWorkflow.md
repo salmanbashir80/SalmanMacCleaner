@@ -1,6 +1,24 @@
 # CI & Release Workflows
 
-## Active workflows (`.github/workflows/`)
+## Where the workflows live
+
+The automation identity that prepares commits in this repository **cannot write
+`.github/workflows/`** — GitHub rejects such a push with
+`refusing to allow a GitHub App to create or update workflow ... without workflows permission`.
+The fixed workflows therefore ship under `Support/workflows/` and are activated by an
+account that has the `workflows` permission:
+
+```bash
+./Scripts/activate_workflows.sh            # unsigned/ad-hoc release (no secrets)
+./Scripts/activate_workflows.sh --signed   # Developer ID signing + notarization
+git add .github/workflows && git commit -m "ci: activate workflows" && git push
+```
+
+The delivered project ZIP already contains these files under `.github/workflows/`
+(byte-identical to the `Support/workflows/` copies), so a ZIP extracted and pushed by
+the repository owner has CI enabled immediately.
+
+## Workflows, once activated (`.github/workflows/`)
 
 | File | Trigger | What it does |
 | --- | --- | --- |
@@ -54,8 +72,12 @@ these secrets exist (GitHub → Settings → Secrets and variables → Actions):
 | `APPLE_TEAM_ID` | Team ID for `notarytool` |
 | `SPARKLE_ED25519_PRIVATE_KEY` | base64 of the Sparkle Ed25519 private key |
 
-`Support/workflows/ci.yml` is a mirror of the active `ci.yml` kept with the
-templates for reference.
+| Template | Activated as | Purpose |
+| --- | --- | --- |
+| `Support/workflows/ci.yml` | `.github/workflows/ci.yml` | build + test + packaged artifact |
+| `Support/workflows/ios-ci.yml` | `.github/workflows/ios-ci.yml` | iOS target build/test |
+| `Support/workflows/release-unsigned.yml` | `.github/workflows/release.yml` | tag release, ad-hoc signed, no secrets |
+| `Support/workflows/release.yml` | `.github/workflows/release.yml` | tag release, Developer ID signed + notarized + Sparkle |
 
 ## Release tags
 
