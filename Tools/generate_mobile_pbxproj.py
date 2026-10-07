@@ -558,7 +558,31 @@ def main():
     os.makedirs(PROJECT_DIR, exist_ok=True)
     with open(PBXPROJ, "w", encoding="utf-8") as f:
         f.write(pbx)
-    print(f"Generated {PBXPROJ}")
+    
+    scheme_dir = os.path.join(PROJECT_DIR, "xcshareddata", "xcschemes")
+    os.makedirs(scheme_dir, exist_ok=True)
+    scheme_path = os.path.join(scheme_dir, "SalmanCleanerMobile.xcscheme")
+    with open(scheme_path, "w", encoding="utf-8") as handle:
+        handle.write("""<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="1500" version="1.3">
+   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
+      <BuildActionEntries>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{0}" BuildableName="SalmanCleanerMobile.app" BlueprintName="SalmanCleanerMobile" ReferencedContainer="container:SalmanCleanerMobile.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
+      <Testables>
+         <TestableReference skipped="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{1}" BuildableName="SalmanCleanerMobileTests.xctest" BlueprintName="SalmanCleanerMobileTests" ReferencedContainer="container:SalmanCleanerMobile.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+</Scheme>""".format(APP_TARGET_ID, TEST_TARGET_ID))
+    print(f"Generated {PBXPROJ} and scheme")
 
 if __name__ == "__main__":
     main()
