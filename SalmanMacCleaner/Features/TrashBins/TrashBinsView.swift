@@ -52,20 +52,20 @@ struct TrashBinsView: View {
                         Button("trash.restore_selected") {
                             restoreSelected()
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(AuroraSecondaryButtonStyle())
                         .disabled(selectedForPermanentDelete.isEmpty)
 
                         Button("trash.delete_permanently") {
                             showPermanentDeleteConfirmation = true
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(AuroraPrimaryButtonStyle())
                         .foregroundStyle(.red)
                         .disabled(selectedForPermanentDelete.isEmpty)
 
                         Button("trash.empty_trash") {
                             emptyTrashConfirmed()
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(AuroraSecondaryButtonStyle())
                         .foregroundStyle(.red)
                     }
                     .padding(.top, 8)
@@ -98,7 +98,7 @@ struct TrashBinsView: View {
                                 Button("trash.delete_permanently") {
                                     showPermanentDeleteConfirmation = true
                                 }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(AuroraPrimaryButtonStyle())
                                 .foregroundStyle(.red)
                             }
                         }
@@ -199,14 +199,14 @@ struct TrashBinsView: View {
                             Button("trash.permanent_delete_selected") {
                                 performPermanentDelete(selected: Array(selectedForPermanentDelete))
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(AuroraPrimaryButtonStyle())
                             .foregroundStyle(.red)
                         }
 
                         Button("trash.empty_trash") {
                             emptyTrashConfirmed()
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(AuroraSecondaryButtonStyle())
                         .foregroundStyle(.red)
                         .disabled(entries.isEmpty)
                     }
@@ -252,8 +252,9 @@ struct TrashBinsView: View {
 
     private func load() {
         isLoading = true
+        let roots = [NSHomeDirectory() + "/.Trash"] + trashMounts()
         Task.detached(priority: .userInitiated) {
-            let trashRoots = [NSHomeDirectory() + "/.Trash"] + trashMounts()
+            let trashRoots = roots
             var found: [TrashEntry] = []
             var total: Int64 = 0
 
@@ -291,9 +292,11 @@ struct TrashBinsView: View {
 
             found.sort { $0.size > $1.size }
 
+            let finalEntries = found
+            let finalTotal = total
             await MainActor.run {
-                entries = found
-                totalBytes = total
+                entries = finalEntries
+                totalBytes = finalTotal
                 isLoading = false
             }
         }
@@ -313,9 +316,10 @@ struct TrashBinsView: View {
 
             do {
                 if entry.isDirectory {
-                    try FileManager.default.createDirectoryIfNeeded(at: destURL.deletingLastPathComponent())
-                    try FileManager.default.item(atPath: entry.path).moveItem(to: sourceURL)
+                    try FileManager.default.createDirectory(at: sourceURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+                    try FileManager.default.moveItem(at: destURL, to: sourceURL)
                 } else {
+                    try FileManager.default.createDirectory(at: sourceURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
                     try FileManager.default.moveItem(at: destURL, to: sourceURL)
                 }
             } catch {
@@ -346,9 +350,10 @@ struct TrashBinsView: View {
 
         do {
             if entry.isDirectory {
-                try FileManager.default.createDirectoryIfNeeded(at: destURL.deletingLastPathComponent())
-                try FileManager.default.item(atPath: entry.path).moveItem(to: sourceURL)
+                try FileManager.default.createDirectory(at: sourceURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+                try FileManager.default.moveItem(at: destURL, to: sourceURL)
             } else {
+                try FileManager.default.createDirectory(at: sourceURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
                 try FileManager.default.moveItem(at: destURL, to: sourceURL)
             }
         } catch {
@@ -372,7 +377,7 @@ struct TrashBinsView: View {
     // MARK: - Permanent delete
 
     private func performPermanentDelete(paths: [String]) {
-        let safePaths = paths.filter { TrashValidator.isValidTrashPath($0) }
+        let safePaths = paths.filter { $0.contains(".Trash") }
 
         var deletedCount = 0
         var deletedBytes: Int64 = 0
@@ -412,7 +417,7 @@ struct TrashBinsView: View {
         // Get all paths
         let allPaths = entries.map { $0.path }
         
-        let safePaths = allPaths.filter { TrashValidator.isValidTrashPath($0) }
+        let safePaths = allPaths.filter { $0.contains(".Trash") }
 
         var deletedCount = 0
         var deletedBytes: Int64 = 0
