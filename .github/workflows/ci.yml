@@ -10,6 +10,8 @@ on:
 jobs:
   build_and_test:
     runs-on: macos-14
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -22,7 +24,7 @@ jobs:
       run: xcodebuild -version
 
     - name: Show Xcode Build List
-      run: xcodebuild -list
+      run: xcodebuild -project SalmanMacCleaner.xcodeproj -list
 
     - name: Resolve Swift Packages
       run: xcodebuild -resolvePackageDependencies -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner
@@ -34,4 +36,25 @@ jobs:
       run: xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
 
     - name: Build Release (Unsigned)
-      run: xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -configuration Release -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
+      run: |
+        xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner -configuration Release -destination 'platform=macOS' -derivedDataPath build_mac CODE_SIGNING_ALLOWED=NO | xcpretty
+        
+    - name: Package Mac Application
+      run: |
+        mkdir -p payload
+        cp -R build_mac/Build/Products/Release/SalmanMacCleaner.app payload/
+        cd payload
+        zip -r ../SalmanMacCleaner-macOS.zip SalmanMacCleaner.app
+        cd ..
+
+    - name: Create GitHub Release
+      if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: SalmanMacCleaner-macOS.zip
+        tag_name: "v1.0.${{ github.run_number }}"
+        name: "SalmanMacCleaner Release v1.0.${{ github.run_number }}"
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
