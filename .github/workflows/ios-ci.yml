@@ -33,7 +33,7 @@ jobs:
           -sdk iphonesimulator \
           -destination 'generic/platform=iOS Simulator' \
           CODE_SIGNING_ALLOWED=NO \
-          build
+          build > build.log 2>&1 || (tail -n 200 build.log && exit 1)
 
     - name: Run Tests on Available Simulator
       run: |
@@ -45,4 +45,4 @@ jobs:
           -scheme SalmanCleanerMobile \
           -destination "platform=iOS Simulator,name=$SIMULATOR" \
           CODE_SIGNING_ALLOWED=NO \
-          test
+          test > test.log 2>&1 || (tail -n 200 test.log && exit 1)
