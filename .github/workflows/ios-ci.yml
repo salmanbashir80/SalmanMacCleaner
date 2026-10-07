@@ -40,12 +40,10 @@ jobs:
     - name: Run Tests on Available Simulator
       if: success()
       run: |
-        SIMULATOR=$(xcrun simctl list devices available | grep -i "iPhone" | head -1 | grep -o -E "iPhone [a-zA-Z0-9 ]+" || echo "iPhone 15")
-        echo "Using simulator: $SIMULATOR"
         xcodebuild \
           -project SalmanCleanerMobile.xcodeproj \
           -scheme SalmanCleanerMobile \
-          -destination "platform=iOS Simulator,name=$SIMULATOR" \
+          -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
           CODE_SIGNING_ALLOWED=NO \
           test > test.log 2>&1 || exit 1
 
