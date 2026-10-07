@@ -292,12 +292,12 @@ def build_pbxproj(app_files: list[str], test_files: list[str]) -> str:
 		700000000000000000000001 /* PBXTargetDependency */ = {{
 			isa = PBXTargetDependency;
 			target = {APP_TARGET_ID} /* SalmanCleanerMobile */;
-			targetProxy = 800000000000000000000001 /* PBXContainerItemProxy */;
+			targetProxy = 700000000000000000000002 /* PBXContainerItemProxy */;
 		}};
 /* End PBXTargetDependency section */
 
 /* Begin PBXContainerItemProxy section */
-		800000000000000000000001 /* PBXContainerItemProxy */ = {{
+		700000000000000000000002 /* PBXContainerItemProxy */ = {{
 			isa = PBXContainerItemProxy;
 			containerPortal = {PROJECT_ID} /* Project object */;
 			proxyType = 1;
