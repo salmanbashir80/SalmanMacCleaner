@@ -11,25 +11,25 @@ account that has the `workflows` permission:
 ```bash
 ./Scripts/activate_workflows.sh            # unsigned/ad-hoc release (no secrets)
 ./Scripts/activate_workflows.sh --signed   # Developer ID signing + notarization
-git add .github/workflows && git commit -m "ci: activate workflows" && git push
+git add .github/workflows
+git commit -m "ci: activate workflows"
+git push origin "$(git branch --show-current)"
 ```
 
-The delivered project ZIP already contains these files under `.github/workflows/`
-(byte-identical to the `Support/workflows/` copies), so a ZIP extracted and pushed by
-the repository owner has CI enabled immediately.
+The repository's checked-in `.github/workflows/` files are still the older workflows until a maintainer with `workflows` permission activates these templates. The source tree alone does not execute files stored under `Support/workflows/`. Review the diff after running the helper, then push the workflow change on the restored branch or merge it through the open pull request.
 
 ## Workflows, once activated (`.github/workflows/`)
 
 | File | Trigger | What it does |
 | --- | --- | --- |
-| `ci.yml` | push to `main` / `arena/**`, PRs to `main`, manual | Structural validation, tree-sitter Swift syntax parse, unit tests, Release build (ad-hoc signed, unsigned fallback), symlink-safe `.app` packaging + SHA-256, uploads the `.app` zip as a build artifact. **No release is published** — artifact only. |
+| `ci.yml` | push to `main` / `arena/**`, PRs to `main`, manual | macOS 14/Xcode 15: unit tests plus Debug and Release builds. GitHub's `xcode-27` preview runner (macOS 27/arm64, Xcode 27): structural and Swift validation, tests, Debug build, ad-hoc signed Release, DMG construction, mounted-image/bundle/signature/install-copy checks, and app launch smoke test. Uploads the real `.dmg` plus SHA-256 as an Actions artifact. **No release is published** — artifact only. macOS 13 is the deployment minimum but has no hosted runtime job. |
 | `release.yml` | tag push `v*`, manual dispatch with a tag | Tests, archive, ad-hoc signature, bundle verification, `ditto` packaging, checksum, GitHub Release. Needs **no secrets**. |
 | `ios-ci.yml` | push / PR | Builds and tests the separate iOS target (`SalmanCleanerMobile.xcodeproj`). |
 
-Nothing in CI ever commits to the repository. Logs are attached as workflow
-artifacts instead of being pushed to branches (an earlier revision force-added
-`build.log`, `test.log` and GitHub API dumps such as `run_status*.json` to
-`main`; those files were removed and the behaviour is gone).
+The new templates upload logs as workflow artifacts and do not commit them to the repository.
+Until a maintainer activates them, the checked-in legacy workflows still contain commit-on-failure
+steps; replace those before treating CI as clean. Earlier revisions force-added `build.log`,
+`test.log` and API dumps such as `run_status*.json` to branches; the new templates remove that behavior.
 
 ### Why the app must not be sandboxed
 
@@ -39,19 +39,27 @@ user grants Full Disk Access, so the scan silently degrades. The project
 therefore builds with `ENABLE_APP_SANDBOX` **not** set and
 `Tools/validate_project.py` fails the build if it reappears.
 
-### Why `ditto` and not `zip`
+### Why a DMG, `ditto`, and not `zip -r`
 
-`ditto -c -k --keepParent` preserves symlinks and extended attributes inside
-`.app` bundles. `zip -r` follows symlinks, which flattens framework version
-directories and produces an application bundle that macOS may refuse to launch.
-Never package the app with `zip`.
+The CI installer is a compressed, read-only DMG made with `hdiutil`. The app is
+copied into its staging folder with macOS `ditto`, which preserves bundle
+metadata and framework symlinks; the image also contains a symbolic link to
+`/Applications` for Finder drag-and-drop installation. CI mounts the finished
+image, verifies its contents and code signature, copies the app to a temporary
+Applications-style install location, and launches that copy.
+
+Do not use `zip -r` on an `.app` bundle: it can follow/flatten framework
+symlinks and yield an application that macOS refuses to launch. GitHub Actions
+may wrap its uploaded artifact in a ZIP for transport, but the downloaded
+artifact contains the verified `.dmg` file.
 
 ### Why ad-hoc signing
 
-On Apple Silicon every executable must carry at least an ad-hoc signature.
-The Release jobs build with `CODE_SIGN_IDENTITY="-"` (which Xcode resolves to
-an ad-hoc signature) and fall back to an unsigned build with a loud warning if
-that is not possible in the runner environment.
+The DMG builder uses `CODE_SIGN_IDENTITY="-"`, which Xcode resolves to an
+ad-hoc signature. The script verifies that signature and fails if it is absent;
+it never silently falls back to an unsigned app. Ad-hoc signing is not Developer
+ID signing or notarization, so users may need to approve the first launch in
+Gatekeeper. The app's stated minimum remains macOS 13.0.
 
 ## Signed / notarized distribution (optional, needs secrets)
 
@@ -74,7 +82,7 @@ these secrets exist (GitHub → Settings → Secrets and variables → Actions):
 
 | Template | Activated as | Purpose |
 | --- | --- | --- |
-| `Support/workflows/ci.yml` | `.github/workflows/ci.yml` | build + test + packaged artifact |
+| `Support/workflows/ci.yml` | `.github/workflows/ci.yml` | macOS 14 + macOS 27 tests/builds; ad-hoc signed, verified, launch-smoke-tested DMG artifact on the `xcode-27` runner |
 | `Support/workflows/ios-ci.yml` | `.github/workflows/ios-ci.yml` | iOS target build/test |
 | `Support/workflows/release-unsigned.yml` | `.github/workflows/release.yml` | tag release, ad-hoc signed, no secrets |
 | `Support/workflows/release.yml` | `.github/workflows/release.yml` | tag release, Developer ID signed + notarized + Sparkle |

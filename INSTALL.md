@@ -1,126 +1,93 @@
-# Install guide — 8002CleanUp 1.2.0 (build 12)
+# Install 8002CleanUp 1.2.0 (build 12)
 
-## Short answer: this ZIP is source code, not a prebuilt app
+## Which download is the app?
 
-The archive contains the **complete Xcode project** (Swift sources, tests, Xcode project,
-tools, docs, helper scripts) — and **no `.app`, `.dmg` or any compiled binary**. Nothing was
-compiled when this ZIP was prepared: that environment had no macOS and no Xcode/Swift
-toolchain (`xcodebuild`, `swift`, `swiftc` are absent; OS was Debian 12 x86_64). A macOS
-application can only be compiled and code-signed on macOS.
+- The **restored-source ZIP** is source code and the complete Xcode project; it contains no `.app`, `.dmg`, or compiled executable.
+- The **DMG workflow artifact** is the intended installable build. It contains `8002CleanUp.app` and an `Applications` shortcut. GitHub may download a workflow artifact as a ZIP wrapper; inside that wrapper is the actual `.dmg`, not another source archive.
+- **This checkout does not currently contain a generated DMG.** Creating one requires a macOS runner (for `xcodebuild`, `codesign`, `hdiutil`, and a real launch check). The Agent Mode host for this restoration is Debian 12 x86_64 and has no Xcode or Swift toolchain. The new macOS 14/macOS 27 CI template is at `Support/workflows/ci.yml`; the repository's active `.github/workflows/ci.yml` must be replaced by a maintainer with GitHub `workflows` permission before that DMG job can run.
 
-So: **unzip → build once on your Mac (one command) → launch.** The build takes a few minutes.
-What *has* been proven about this source is in `RESTORE_REPORT.md`: GitHub's macOS-14 runner
-compiled it, ran the XCTest suite and built both Debug and Release successfully (run
-37675648454); it has **not** been launched or installed anywhere.
+The final artifact name is generated from the app's built plist, currently expected to be:
+
+```text
+8002CleanUp-1.2.0-build12-macos-arm64.dmg
+8002CleanUp-1.2.0-build12-macos-arm64.dmg.sha256
+```
+
+Do not treat the existing `v1.0.6` or `v1.0.13` release ZIPs as this DMG; those are old, mis-tagged artifacts from the broken `main` history (see `RESTORE_REPORT.md`).
 
 ---
 
-## 1. Requirements
+## 1. Activate and run the DMG CI
 
-| Item | Requirement | Why |
-| --- | --- | --- |
-| Mac | macOS **13.0 (Ventura) or newer** | `MACOSX_DEPLOYMENT_TARGET = 13.0` |
-| Xcode | **Xcode 15 or newer** (CI verified with 15.2) | Swift 5.9 language mode, SwiftUI APIs |
-| Architecture | Apple Silicon **or** Intel | `ARCHS` is not pinned: you get a build for the Mac you build on |
-| Disk | ~2–3 GB free | Derived data + build products |
-| Network | Internet for the **first** build only | Xcode resolves the Sparkle 2 Swift package from GitHub |
-| Optional | Python 3 | Only for the no-Xcode validation scripts in `Tools/` |
+A repository maintainer with permission to write GitHub Actions workflow files must activate the restored workflow template. From the restored branch:
 
-Full Disk Access is **not** required to build or launch; it is required for deep scans of
-`~/Library` and other protected locations, and you grant it yourself (step 5).
+```bash
+./Scripts/activate_workflows.sh
+git diff -- .github/workflows
+```
+
+Review the workflow diff. Then commit the workflow activation on the restored branch (or merge it through the existing pull request) using an identity with GitHub's `workflows` permission. The helper does not push or publish a release by itself.
+
+The CI workflow then runs:
+
+- macOS 14 with Xcode 15: unit tests, Debug build, and Release build;
+- GitHub's `xcode-27` preview runner on macOS 27 / arm64 with Xcode 27: validation, tests, Debug build, ad-hoc signed Release build, DMG creation, image verification, install-copy verification, and app launch smoke test.
+
+On a successful run, open **GitHub → Actions → CI → the completed run → Artifacts** and download `8002CleanUp-1.2.0-build12-macos27-arm64-dmg`. Extract GitHub's artifact wrapper ZIP to get the `.dmg` and adjacent `.sha256` file. The workflow intentionally creates no GitHub Release and does not package the app with `zip -r`.
+
+The Xcode 27 runner is marked preview by GitHub. The workflow fails rather than silently substituting another OS/toolchain if the runner is not macOS 27, Xcode 27, and arm64.
 
 ---
 
-## 2. Build and install (recommended path)
+## 2. Install from the DMG
 
-```bash
-cd /where/you/unzipped/8002CleanUp-1.2.0-build12
+1. In Finder, double-click the downloaded `.dmg`.
+2. In the mounted window, drag **`8002CleanUp.app`** onto the **Applications** shortcut.
+3. Eject the mounted `8002CleanUp` volume in Finder.
+4. Open `/Applications/8002CleanUp.app`.
+5. Because this build is ad-hoc signed and **not notarized**, macOS may block the first launch. If so, Control-click/right-click the app, choose **Open**, then choose **Open** again in the confirmation dialog. This is the preferred first-launch approval. If necessary, remove the download quarantine attribute explicitly:
 
-# 0) optional, no Xcode needed — structural sanity check
-python3 Tools/validate_project.py          # expect: PASSED — all checks passed (0 warnings)
-
-# 1) build Release, verify the bundle, package it
-./Scripts/build_and_verify_macos.sh
-```
-
-That script checks for `xcodebuild`, resolves the Sparkle package, builds `Release`
-(ad-hoc signed, with an unsigned fallback), prints the bundle's `CFBundleDisplayName`,
-`CFBundleShortVersionString`, `CFBundleVersion`, `CFBundleIdentifier`, `lipo -archs` and
-`codesign --verify` result, then writes
-`dist/8002CleanUp-1.2.0-build12-macos.zip` plus its SHA-256 in `dist/checksums.txt`.
-
-```bash
-# 2) install it into /Applications and clear the quarantine flag
-./Scripts/build_and_verify_macos.sh --install
-
-# 3) launch
-open /Applications/SalmanMacCleaner.app
-```
-
-Run the test suite as well with `./Scripts/build_and_verify_macos.sh --test`.
-
-### Manual equivalent (if you prefer raw Xcode commands)
-
-```bash
-xcodebuild -resolvePackageDependencies -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner
-
-xcodebuild build -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner \
-  -configuration Release -destination 'platform=macOS' -derivedDataPath build_mac \
-  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=""
-
-APP=build_mac/Build/Products/Release/SalmanMacCleaner.app
-codesign --verify --deep --strict --verbose=2 "$APP"
-open "$APP"
-```
-
-Or just open `SalmanMacCleaner.xcodeproj` in Xcode, choose the **SalmanMacCleaner** scheme and
-select *Product → Run* (⌘R).
-
----
-
-## 3. First launch, Gatekeeper and Full Disk Access
-
-1. **Gatekeeper.** The build is **ad-hoc signed, not notarized**, so a downloaded/zipped copy may
-   be quarantined. If macOS refuses the first launch: **right-click the app → Open → Open**, or
    ```bash
-   xattr -dr com.apple.quarantine /Applications/SalmanMacCleaner.app
+   xattr -dr com.apple.quarantine /Applications/8002CleanUp.app
+   open /Applications/8002CleanUp.app
    ```
-   (The `--install` option of the script does this for you.)
-2. **Identify the build.** The sidebar header/toolbar badge must read **8002CleanUp · v1.2.0 (12)**.
-   The bundle file itself is named `SalmanMacCleaner.app`; **8002CleanUp** is the visible name
-   (`CFBundleName`/`CFBundleDisplayName`) — both names refer to the same app.
-3. **Full Disk Access** (for complete scans): System Settings → Privacy & Security → Full Disk
-   Access → **+** → add `/Applications/SalmanMacCleaner.app` → toggle it on → relaunch the app.
-   Without it, the app still runs; scans of protected locations are reported as *limited/denied*
-   rather than silently pretending to be complete.
+
+6. For complete scans, add `/Applications/8002CleanUp.app` under **System Settings → Privacy & Security → Full Disk Access**, enable it, and relaunch. Full Disk Access is optional for launch and is granted by the user; without it, protected locations are reported as limited/denied.
+
+The app's bundle identifier remains `com.salman.SalmanMacCleaner`; the user-visible app and DMG name is `8002CleanUp`. The app's internal executable/target is still `SalmanMacCleaner`.
+
+### Verify the download checksum
+
+From the directory containing both downloaded files:
+
+```bash
+shasum -a 256 -c 8002CleanUp-1.2.0-build12-macos-arm64.dmg.sha256
+```
+
+The checksum file is generated from the DMG produced by CI; do not reuse a checksum from a different build or commit.
 
 ---
 
-## 4. Limitations you should know about
+## 3. Build a DMG locally on a Mac
 
-| Area | Status | Detail |
-| --- | --- | --- |
-| Signing | **Ad-hoc only** | Signed with identity `-` (required so it launches on Apple Silicon). No Developer ID. |
-| Notarization | **None** | Not notarized/stapled → first launch may need right-click → Open or the `xattr` command. |
-| Sparkle updates | **Inactive for this build** | `Support/appcast.xml` contains no releases and the updater reports itself unconfigured; a Developer ID signed, notarized release (secrets + `Support/workflows/release.yml`) is what enables real updates. |
-| Apple Silicon | Ad-hoc signature is sufficient to launch locally | Building on an Apple Silicon Mac gives an arm64 app; building on Intel gives x86_64. No universal binary is shipped (nothing prebuilt is shipped). |
-| macOS version | **macOS 13.0+** | On macOS 26 the app additionally uses native Liquid Glass, `#available`-guarded. |
-| iOS target | Present, separate | `SalmanCleanerMobile.xcodeproj` is a distinct iOS app; it was **not** verified in this restore. |
-| Verification scope | Compile + unit tests proven on a macOS runner | Launch, install, Gatekeeper prompts and the ad-hoc signing flags in the new CI template have **not** been exercised yet. Nothing in this package was built or run by the environment that produced it. |
-| Ready-made `.app` without a Mac | Possible via GitHub Actions | Push this tree (its `.github/workflows/` files are the fixed ones; `.github/workflows` requires an account/PAT with the `workflows` permission) and run the `CI` workflow — it builds, verifies and uploads the packaged `.app` as a workflow artifact. |
+Requirements: macOS 13+, Xcode 15+, Python 3, and network access for the first Swift Package Manager resolution (Sparkle).
+
+```bash
+# From the repository root
+./Scripts/build_and_package_dmg.sh
+
+# Optionally run XCTest before building/package verification
+./Scripts/build_and_package_dmg.sh --test
+```
+
+The script uses a fresh DerivedData directory, requires a valid ad-hoc code signature (no unsigned fallback), verifies the app plist/resources/architecture and internal symlinks, copies the bundle with `ditto`, creates a compressed read-only DMG with `hdiutil`, checks that the DMG contains the app plus the `/Applications` symlink, checks the install-copy signature, launches that copied app, then writes a SHA-256 sidecar in `dist/`.
+
+By default, the local build targets the current Mac's architecture. Set `APP_ARCH=arm64` to explicitly produce an Apple Silicon build. The CI distribution DMG is arm64. It is not a universal Intel/Apple-Silicon binary.
 
 ---
 
-## 5. What to expect once it runs
+## 4. Supported OS and what verification means
 
-- 20 modules in the sidebar (Smart Care, Deep Scan, System Junk, Developer Caches, Large & Old
-  Files, Duplicate Finder, App Leftovers, Applications, Uninstaller, App Updater, Performance,
-  Space Lens, Trash Bins, Security Audit, Permissions, Startup & Background Items, Activity &
-  History, My Tools, Settings …).
-- **Preview Mode ON by default**: nothing is removed until you tick items and confirm.
-- Cleanup moves files to the Trash. The **Trash Bins** module is the only place that can delete
-  immediately, and only for items already inside a Trash folder, after re-validating each path
-  against the real Trash roots and asking for confirmation.
-- "Back to Smart Care" appears inside Duplicate Finder and Startup & Background Items — if those
-  buttons are absent you are looking at an old copy of the app (e.g. a stale `/Applications` entry
-  from the v1.0.x releases that shipped a build of the broken `main` state).
+`MACOSX_DEPLOYMENT_TARGET` and `LSMinimumSystemVersion` are set to **13.0**. The CI workflow checks the built plist and runs on macOS 14 and macOS 27; the macOS 27 job launches the copied app from its temporary install location. There is no macOS 13 hosted runtime job in the configured matrix, so actual execution on macOS 13 remains unverified until tested on a Ventura Mac.
+
+The macOS 27 job checks bundle integrity, valid ad-hoc signing, the mounted DMG layout and application launch. It cannot test a user's downloaded-file quarantine dialog, notarization/Gatekeeper acceptance, Full Disk Access consent, every hardware configuration, or all app features against live user data. Developer ID signing/notarization is not included; the ad-hoc DMG requires the first-launch approval described above.

@@ -27,4 +27,6 @@ dist/
 *.log
 SalmanMacCleaner-*.zip
 8002CleanUp-*.zip
+*.dmg
+*.dmg.sha256
 mac_test.log

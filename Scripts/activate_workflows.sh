@@ -43,7 +43,8 @@ fi
 cat <<'EOF'
 
 Activated:
-  .github/workflows/ci.yml       build + tests + packaged .app artifact (no releases)
+  .github/workflows/ci.yml       macOS 14 + 27 tests/builds; ad-hoc signed DMG,
+                                  bundle/signature verification and launch smoke test
   .github/workflows/release.yml  publishes a release from a v* tag
   .github/workflows/ios-ci.yml   iOS target build/test
 
@@ -51,5 +52,5 @@ Review, then commit and push with an account that has the `workflows` permission
 
   git add .github/workflows
   git commit -m "ci: activate the restored workflows"
-  git push origin main
+  git push origin "$(git branch --show-current)"
 EOF

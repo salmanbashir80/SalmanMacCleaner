@@ -78,8 +78,8 @@ Additionally fixed in this pass (defects present in the released state):
 | --- | --- |
 | **Trash safety regression** | The released code validated permanent deletion with `paths.filter { $0.contains(".Trash") }` — any path merely *containing* `.Trash` (e.g. `~/Documents/my.Trash.notes/`) passed. Restored: standardised prefix check against the real Trash roots (`~/.Trash` + per-volume trashes). |
 | **Put Back on items with no original path** | Restored version disables Put Back when `originalPath` is unknown instead of offering a dead action. |
-| **Non-installable packaging** | CI packaged the `.app` with `zip -r`, which follows symlinks and flattens framework version directories. All packaging now uses `ditto -c -k --keepParent` (CI + local script). |
-| **Unsigned Release build** | Release builds are now ad-hoc signed (`CODE_SIGN_IDENTITY="-"`, which Apple Silicon requires) with an explicit unsigned fallback and a loud warning. |
+| **Non-installable packaging** | The active legacy CI packaged the `.app` with `zip -r`, which can flatten framework symlinks. The new DMG builder stages the bundle with `ditto`, creates a read-only image with `hdiutil`, and verifies the mounted contents; this new path is not yet run in CI. |
+| **Ad-hoc signature** | The new DMG builder uses `CODE_SIGN_IDENTITY="-"` and fails if it cannot verify the ad-hoc signature; it has no unsigned fallback. Developer ID signing and notarization are not included. |
 | **Misleading release tags** | `main` pushes no longer publish `v1.0.<run number>` releases; `release.yml` publishes from a real tag and names the asset after the product version. |
 | **CI committing into the repo** | The "Commit Logs on Failure" steps force-added `build.log`, `test.log`, `job_log*.txt`, `run_status*.json`, `jobs*.json`, `annotations.json`, `artifacts.json`, `step_logs.txt` to the repo; they are deleted and logs now upload as workflow artifacts. |
 | **Raw localization keys in the UI** | 10 keys used by the restored Trash/Duplicate views (`trash.restore_selected`, `trash.delete_permanently`, `permanent_delete_confirmation_title`, …) were **never defined in any commit**, so the UI displayed the raw key. They are now defined in `en.lproj/Localizable.strings` (603 used keys, 0 undefined). |
@@ -117,8 +117,8 @@ Tools/validate_project.py                      sandbox assertion restored; destr
 SalmanMacCleaner/en.lproj/Localizable.strings  10 missing keys added; Trash warning copy corrected
 SalmanMacCleaner/Core/AppIdentity.swift        version-badge doc comment
 SalmanMacCleaner/Features/TrashBins/TrashBinsView.swift  dead "Search" button (empty action) removed
-Support/workflows/ci.yml                    FIXED CI workflow (ad-hoc signing, ditto packaging,
-                                            no auto-release from main pushes, artifact logs)
+Support/workflows/ci.yml                    macOS 14 + macOS 27 tests/builds; DMG artifact,
+                                            ad-hoc signing and mounted-image/launch checks
 Support/workflows/release-unsigned.yml (new)  FIXED tag-release workflow (real product version,
                                             ditto packaging, SHA-256, no secrets needed)
 Support/workflows/ios-ci.yml (new)          FIXED iOS workflow (no branch-pushing log dumps)
@@ -127,9 +127,11 @@ Scripts/activate_workflows.sh (new)         copies the templates into .github/wo
 CHANGELOG.md, README.md, SECURITY.md           accurate Trash/sandbox policy; restore entry
 Docs/Distribution.md, Docs/ReleaseWorkflow.md  sandbox rationale; CI/release documentation
 TEST_REPORT-v1.2.0.md                          marked as the historical build-8 report
-Scripts/build_and_verify_macos.sh  (new)       build + verify + optional install on macOS
-INSTALL.md  (new)                              quick-start build/install/limitations guide
-RESTORE_REPORT.md  (new)                       this document (evidence + provenance audit)
+Scripts/build_and_package_dmg.sh (new)          build + ad-hoc sign + verify + hdiutil DMG + install/launch smoke test
+Scripts/build_and_verify_macos.sh               compatibility shim to the DMG builder (no ZIP output)
+Scripts/Install.command                         double-clickable DMG builder; opens Finder to the finished image
+INSTALL.md                                       DMG activation, checksum, installation and limitation guide
+RESTORE_REPORT.md                                evidence + provenance audit, with current DMG status
 ```
 
 Removed: `TrashValidator.swift`, `Tools/generate_mobile_pbxproj.py.bak`, `build.log`, `test.log`,
@@ -148,8 +150,9 @@ Run in this Linux container, on the restored tree:
 | Swift syntax parse (all files) | `python3 Tools/parse_check.py` (tree-sitter Swift grammar) | Parsed **102 Swift files** — **no syntax errors** |
 | Cross-reference heuristic | `python3 Tools/xref_check.py` | Checked 102 files — no suspicious member references |
 | Tooling syntax | `python3 -m py_compile Tools/*.py` | All OK |
-| Workflow YAML | `yaml.safe_load` on all 5 workflow files | All valid |
-| Build/verify script | `bash -n Scripts/build_and_verify_macos.sh` | Syntax OK |
+| Workflow YAML | `yaml.safe_load` on all 7 files under `.github/workflows/` and `Support/workflows/` | All valid |
+| DMG build/package script | `bash -n Scripts/build_and_package_dmg.sh` | Syntax OK (macOS commands not run here) |
+| Compatibility/installer scripts | `bash -n Scripts/build_and_verify_macos.sh Scripts/Install.command Scripts/activate_workflows.sh` | Syntax OK |
 | Diff review | file-by-file `git diff 0e990e1 HEAD` / `63e9c9c` | Every restored hunk traced to a named working commit; no unverified rewrites |
 
 Baseline check: `Tools/validate_project.py` on **unmodified `main` (`63e9c9c`)** already failed with
@@ -163,7 +166,8 @@ The first CI run on this branch is what found the three concurrency errors above
 
 | Run | Workflow | Event | Commit | Result | Steps |
 | --- | --- | --- | --- | --- | --- |
-| [37679861978](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37679861978) | `CI` | pull_request | `7d6ebac` (final tree) | **success** | `Run Unit Tests` ✅ · `Build Debug` ✅ · `Build Release (Unsigned)` ✅ · `Package Mac Application` ✅ (`Create GitHub Release` correctly skipped) |
+| [37680551814](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37680551814) | `CI` | pull_request | `0373d16` (restored branch before DMG follow-up) | **success** | XCTest ✅ · Debug ✅ · Release (unsigned) ✅ · legacy `Package Mac Application` ✅; no DMG and no uploaded artifacts |
+| [37679861978](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37679861978) | `CI` | pull_request | `7d6ebac` | **success** | `Run Unit Tests` ✅ · `Build Debug` ✅ · `Build Release (Unsigned)` ✅ · `Package Mac Application` ✅ (`Create GitHub Release` correctly skipped) |
 | [37675648454](https://github.com/salmanbashir80/SalmanMacCleaner/actions/runs/37675648454) | `CI` | pull_request | `5757d6f` | **success** | same four steps ✅ |
 | 37675150238 | `CI` | pull_request | `abfaa89` | failure | 3 `TrashBinsView.swift` concurrency errors (fixed in `5757d6f`) |
 
@@ -199,20 +203,20 @@ This is **compile + unit-test evidence**, not launch/install evidence.
 *(A standalone quick-start copy of this section ships as `INSTALL.md` at the project root,
 so anyone who unzips the archive sees the build/launch steps immediately.)*
 
-### Option A — script (recommended)
+### Option A — build and package as a DMG (recommended)
 
 ```bash
-cd /path/to/8002CleanUp                 # the unzipped project
-python3 Tools/validate_project.py       # structural validation, no Xcode needed
-./Scripts/build_and_verify_macos.sh            # build + verify bundle
-./Scripts/build_and_verify_macos.sh --test     # also runs the XCTest suite
-./Scripts/build_and_verify_macos.sh --install  # build, verify, copy to /Applications
+cd /path/to/SalmanMacCleaner             # the cloned/unzipped project
+python3 Tools/validate_project.py        # structural validation, no Xcode needed
+./Scripts/build_and_package_dmg.sh      # Release + signed DMG + mount/install/launch checks
+./Scripts/build_and_package_dmg.sh --test  # also runs the XCTest suite
 ```
 
-The script checks for `xcodebuild`, resolves the Sparkle package, builds Release (ad-hoc signed,
-unsigned fallback), prints `CFBundleName/DisplayName/ShortVersion/Bundle/Identifier`,
-`lipo -archs`, `codesign --verify` output, then packages `dist/8002CleanUp-1.2.0-build12-macos.zip`
-with a SHA-256 in `dist/checksums.txt`.
+The new script is macOS-only. It requires a valid ad-hoc signature (no unsigned fallback),
+checks bundle resources and symlinks, uses `ditto` to stage `8002CleanUp.app`, creates and
+mounts a read-only `.dmg` with an `/Applications` shortcut, verifies the copied bundle, and
+runs a launch smoke test. It writes the DMG and SHA-256 sidecar to `dist/`. It has not been
+executed in the Linux Agent Mode host; see section 9 for the current CI/artifact status.
 
 ### Option B — raw commands
 
@@ -236,10 +240,10 @@ APP=build_mac/Build/Products/Release/SalmanMacCleaner.app
 codesign --verify --deep --strict --verbose=2 "$APP"
 open "$APP"
 
-# Install (replacing any older copy)
-rm -rf /Applications/SalmanMacCleaner.app
-cp -R "$APP" /Applications/
-xattr -dr com.apple.quarantine /Applications/SalmanMacCleaner.app 2>/dev/null || true
+# Copy/install without zip -r (the DMG uses this same bundle-preserving copy)
+rm -rf /Applications/8002CleanUp.app
+/usr/bin/ditto "$APP" /Applications/8002CleanUp.app
+xattr -dr com.apple.quarantine /Applications/8002CleanUp.app 2>/dev/null || true
 ```
 
 Expected: **8002CleanUp 1.2.0 (12)** in the sidebar header/toolbar badge, sidebar rows clear of the
@@ -248,33 +252,41 @@ grantable and honored by Deep Scan. The unpacked app is **not notarized** (no De
 so the first launch needs right-click → **Open**, or the `xattr -dr com.apple.quarantine` command.
 The bundle is `SalmanMacCleaner.app` while the visible name is **8002CleanUp**.
 
-### Option C — let GitHub's macOS runners do it (real compile + test evidence)
+### Option C — let GitHub's macOS runners build and test the DMG
 
-The workflow files ship under `Support/workflows/` **and** are already placed in
-`.github/workflows/` inside the delivered ZIP. Push the extracted ZIP (or run the activation
-script on an existing clone), then trigger the run:
+The new CI template is in `Support/workflows/ci.yml`. The active `.github/workflows/ci.yml` on
+the repository branch is still the older pipeline, which builds a ZIP and does not upload a DMG.
+A maintainer with GitHub `workflows` permission must activate and push the template on the restored
+branch; do not push this workflow change directly to `main`:
 
 ```bash
-./Scripts/activate_workflows.sh          # only needed when working from a clone
-git add .github/workflows Support/workflows
-git commit -m "ci: activate the restored workflows"
-git push origin main
+./Scripts/activate_workflows.sh
+git diff -- .github/workflows
+git add .github/workflows
+git commit -m "ci: activate macOS 27 DMG verification"
+git push origin arena/1e501ddc-salmanmaccleaner
+```
 
-gh workflow run CI --repo salmanbashir80/SalmanMacCleaner --ref main
+After the workflow is activated, dispatch it (or let the pull-request check run) and download the
+DMG + SHA-256 from the Actions artifact:
+
+```bash
+gh workflow run CI --repo salmanbashir80/SalmanMacCleaner \
+  --ref arena/1e501ddc-salmanmaccleaner
 gh run watch --repo salmanbashir80/SalmanMacCleaner
 ```
 
-The updated `ci.yml` runs the validator, the tree-sitter parse, the XCTest suite and a Release
-build on `macos-14`, then uploads the packaged `.app` + checksum as a build artifact. That run is
-the authoritative compile/test evidence and the fastest way to obtain a launchable `.app` without
-a local Mac.
+The macOS 14 job tests/builds with Xcode 15. The `xcode-27` preview job checks macOS 27/Xcode 27,
+runs tests and Debug/Release builds, creates and mounts a signed DMG, checks its app bundle and
+Applications symlink, copies the app to an install-style folder, and launches it. This is the
+intended route to a real DMG without a local Mac, but **the template still has to run successfully**
+before an actual DMG/checksum can be claimed.
 
-> **Push constraint (measured, not assumed).** The automation identity used to prepare these
-> commits may not write `.github/workflows/`: `git push` was rejected with
-> `refusing to allow a GitHub App to create or update workflow '.github/workflows/ci.yml' without
-> 'workflows' permission`. The pushed branch therefore contains the workflow templates only under
-> `Support/workflows/`, while the ZIP contains them activated in both locations. The repository
-> owner (or a PAT with the `workflow` scope) can push them in one command.
+> **Workflow-write constraint (measured, not assumed).** A previous push that included
+> `.github/workflows/ci.yml` was rejected with `refusing to allow a GitHub App to create or update
+> workflow ... without 'workflows' permission`. The CI template and build script can be committed
+> under `Support/` and `Scripts/`, but a repository maintainer with workflow-write permission must
+> activate/push `.github/workflows/ci.yml` before these new checks can run.
 
 ---
 
@@ -293,9 +305,10 @@ a local Mac.
 4. **Signed distribution** needs the six secrets listed in `Docs/ReleaseWorkflow.md`; until then
    releases are ad-hoc/unsigned and macOS shows the standard first-launch prompt.
 5. **Workflow activation.** `.github/workflows/` cannot be written by the automation token used
-   for these commits (GitHub rejected the push; see Option C). The fixed workflows are committed
-   under `Support/workflows/` and are present, activated, in the delivered ZIP;
-   `./Scripts/activate_workflows.sh` performs the copy and the owner pushes it.
+   for these commits (GitHub rejected the push; see Option C). The CI/release templates live under
+   `Support/workflows/`; a maintainer with workflow-write permission must run
+   `./Scripts/activate_workflows.sh`, review the changes, then push them on the restored branch.
+   The DMG CI cannot run until that activation is complete.
 6. **`v1.0.6` / `v1.0.13` releases** remain on GitHub with misnamed tags; they were produced by the
    removed run-number logic. Deleting them (or re-tagging `v1.2.0`) is a repository-owner action.
 
@@ -358,3 +371,27 @@ If "Freebuff" was seen outside this repository (for example as a browser extensi
 utility, or a label in another tool), it cannot be linked to these changes from any evidence in
 this repository or in the Arena-side history that is visible to this session — no such name is
 present in either.
+
+---
+
+## 9. DMG request — implementation added, binary not yet built
+
+The DMG packaging path was added after the source restore. **There is no generated DMG in this
+checkout or in the latest CI run.** This status is explicit so the packaging script/template is
+not mistaken for an installable artifact.
+
+| Check | Evidence | What it proves / does not prove |
+| --- | --- | --- |
+| Local build host | Debian 12 x86_64; `xcodebuild`, `swift`, and `swiftc` are not installed | This host cannot compile, sign, mount a DMG, or launch a macOS app |
+| Existing macOS CI at restored HEAD | Run `37680551814` on `0373d161b5caa2d4c3983ad67bf1971b7a03f209` passed XCTest, Debug build, Release build, and the old `Package Mac Application` step | It used the checked-in legacy workflow (`macos-14`, `zip -r`); run Artifacts API returned `total_count: 0`. It did not produce or upload a DMG |
+| New build/package path | `Scripts/build_and_package_dmg.sh` and the `Support/workflows/ci.yml` template | Added, but not run on macOS in this session |
+| macOS 27 runner availability | GitHub `actions/runner-images` issue [#14404](https://github.com/actions/runner-images/issues/14404) and its `xcode-27-arm64-Readme.md` identify the preview `xcode-27` image as macOS 27 with Xcode 27 | A runner label is available for a real macOS 27 CI attempt; it is not evidence that this project's new workflow passed |
+| Workflow activation | The active `.github/workflows/ci.yml` is still the old file; the GitHub App push previously failed for lack of `workflows` permission | A repository maintainer with workflow-write permission must run `Scripts/activate_workflows.sh`, review/commit the workflow changes on the restored branch, then run CI |
+| Minimum OS | Project `MACOSX_DEPLOYMENT_TARGET = 13.0`; new script checks built `LSMinimumSystemVersion` | Declares a 13.0 minimum. There is no macOS 13 hosted runner in the configured matrix, so real Ventura launch remains unverified |
+
+The intended CI will run tests and Debug/Release builds on macOS 14, then on macOS 27 will build
+an arm64 Release, require and verify an ad-hoc code signature, preserve the app bundle with
+`ditto`, create a read-only DMG with `hdiutil`, mount and inspect it, copy the app into a
+staged Applications folder, and run a launch smoke test. That workflow is a plan/template until
+activated and successfully run. A GitHub Actions run artifact will contain the `.dmg` and its
+`.sha256` sidecar; it is not a substitute for reporting the actual resulting checksum.
