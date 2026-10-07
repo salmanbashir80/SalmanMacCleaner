@@ -21,3 +21,12 @@ __pycache__/
 
 # GitHub workflows live in Support/workflows/ and are copied to
 # .github/workflows/ when CI is enabled (see Docs/ReleaseWorkflow.md).
+
+# Build output / packaged releases
+dist/
+*.log
+SalmanMacCleaner-*.zip
+8002CleanUp-*.zip
+*.dmg
+*.dmg.sha256
+mac_test.log

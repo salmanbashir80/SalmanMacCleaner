@@ -177,6 +177,7 @@
 "duplicates.preview_done" = "Previewed %d duplicate file(s) — nothing was moved.";
 "duplicates.clean_done" = "Moved %d duplicate file(s) to the Trash.";
 "duplicates.confidence.exact" = "Exact hash match";
+"duplicates.choose_folder.help" = "Choose a folder to scan for duplicates.";
 "duplicates.confirm.reason" = "Same size and full SHA-256 content match; keeper remains.";
 "duplicates.coverage.complete" = "Measured %d files (%@) across %d directories.";
 "duplicates.coverage.partial" = "Partial coverage: measured %d files (%@) across %d directories; %d paths were inaccessible or the scan bounds were reached.";
@@ -796,9 +797,18 @@
 "tools.card.hint" = "Opens this tool";
 "tools.check_updates" = "Check for Updates";
 "tools.search" = "Search tools";
+"trash.bins_title" = "Trash Bins";
+"trash.delete_permanently" = "Delete Immediately…";
+"trash.empty.message_after_search" = "No Trash items match your search.";
+"trash.permanent_delete_selected" = "Delete Selected Immediately…";
+"trash.restore" = "Put Back";
+"trash.restore_selected" = "Put Back Selected";
+"trash.search_placeholder" = "Search Trash";
+"permanent_delete_confirmation_title" = "Delete these items immediately?";
+"permanent_delete_confirmation_message" = "These items are already in the Trash. Deleting them here permanently removes them and they cannot be recovered from the Trash afterwards.";
 "trash.empty.message" = "Nothing to show — your Trash is clean.";
 "trash.empty.title" = "Trash is empty";
-"trash.empty_warning" = "macOS provides no supported API for third-party apps to empty the Trash. This module shows what is inside; emptying happens in Finder and may be irreversible.";
+"trash.empty_warning" = "Deleting items immediately is permanent and cannot be undone. Only items located inside a Trash folder are ever removed, and only after you confirm.";
 "trash.open_finder" = "Open in Finder";
 "trash.refresh" = "Refresh";
 "trash.summary" = "%lld item(s), %@";

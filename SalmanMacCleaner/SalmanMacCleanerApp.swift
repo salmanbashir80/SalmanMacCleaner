@@ -17,27 +17,13 @@ struct SalmanMacCleanerApp: App {
     @StateObject private var permissionService = PermissionService.shared
     @Environment(\.scenePhase) private var scenePhase
 
-    init() {
-        // Prevent duplicate instances of the app from running simultaneously
-        if let bundleIdentifier = Bundle.main.bundleIdentifier {
-            let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
-            if runningApps.count > 1 {
-                // Keep the oldest instance running, terminate if we are a newly launched duplicate
-                let sorted = runningApps.sorted { ($0.launchDate ?? Date.distantFuture) < ($1.launchDate ?? Date.distantFuture) }
-                if let oldest = sorted.first, oldest != NSRunningApplication.current {
-                    NSApplication.shared.terminate(nil)
-                }
-            }
-        }
-    }
-
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(accessibility)
                 .environmentObject(permissionService)
-                .frame(minWidth: 1100, minHeight: 720)
+                .frame(minWidth: 980, minHeight: 640)
                 .preferredColorScheme(appState.settings.appearance.colorScheme)
                 .onChange(of: scenePhase) { newPhase in
                     if newPhase == .active {
@@ -45,7 +31,7 @@ struct SalmanMacCleanerApp: App {
                     }
                 }
         }
-        .defaultSize(width: 1440, height: 900)
+        .defaultSize(width: 1180, height: 760)
         .windowStyle(.automatic)
         .commands {
             CommandGroup(replacing: .newItem) {}

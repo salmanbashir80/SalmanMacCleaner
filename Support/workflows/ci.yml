@@ -1,61 +1,175 @@
 name: CI
 
+# This workflow deliberately produces a real, drag-install .dmg (not a source
+# ZIP and not a zip -r copy of an app bundle). Xcode 27's hosted image currently
+# runs on macOS 27 and is preview-labelled by GitHub; a separate macOS 14 job
+# continues to exercise the macOS 13 deployment target with the older toolchain.
+
 on:
   push:
-    branches: [main]
+    branches: [ "main", "arena/**" ]
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build & Test (macOS, arm64)
+  compatibility-macos14:
+    name: Tests and Debug/Release builds (macOS 14, Xcode 15)
     runs-on: macos-14
+    timeout-minutes: 75
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
-
-      - name: Structural validation (no Xcode required)
-        run: python3 Tools/validate_project.py
+      - name: Select Xcode 15
+        run: |
+          if [ -d /Applications/Xcode_15.4.app/Contents/Developer ]; then
+            sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          elif [ -d /Applications/Xcode_15.2.app/Contents/Developer ]; then
+            sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+          else
+            echo "::error::Xcode 15.2 or 15.4 is required for the compatibility job"
+            exit 1
+          fi
+          sw_vers
+          xcodebuild -version
 
       - name: Resolve Swift packages
-        run: |
-          xcodebuild -project SalmanMacCleaner.xcodeproj \
-            -scheme SalmanMacCleaner \
-            -resolvePackageDependencies
+        run: xcodebuild -resolvePackageDependencies -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner
 
-      - name: Build (Debug, unsigned)
-        run: |
-          xcodebuild \
-            -project SalmanMacCleaner.xcodeproj \
-            -scheme SalmanMacCleaner \
-            -configuration Debug \
-            -destination 'platform=macOS,arch=arm64' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
-
-      - name: Build (Release, unsigned)
-        run: |
-          xcodebuild \
-            -project SalmanMacCleaner.xcodeproj \
-            -scheme SalmanMacCleaner \
-            -configuration Release \
-            -destination 'platform=macOS,arch=arm64' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+      - name: Structural validation
+        run: python3 Tools/validate_project.py
 
       - name: Run unit tests
         run: |
-          xcodebuild \
+          set -o pipefail
+          xcodebuild test \
+            -project SalmanMacCleaner.xcodeproj \
+            -scheme SalmanMacCleaner \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee macos14-tests.log
+
+      - name: Build Debug
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project SalmanMacCleaner.xcodeproj \
+            -scheme SalmanMacCleaner \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee macos14-debug.log
+
+      - name: Build Release
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project SalmanMacCleaner.xcodeproj \
+            -scheme SalmanMacCleaner \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            2>&1 | tee macos14-release.log
+
+      - name: Upload macOS 14 logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos14-xcode15-logs
+          path: macos14-*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  dmg-macos27:
+    name: DMG, signing, bundle and launch verification (macOS 27, Xcode 27)
+    # GitHub currently labels this preview image `xcode-27`. It runs macOS 27
+    # with Xcode 27; the build_and_package_dmg.sh script checks both facts.
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify macOS 27 / Xcode 27 runner
+        run: |
+          sw_vers
+          xcodebuild -version
+          MACOS_VERSION="$(sw_vers -productVersion)"
+          XCODE_VERSION="$(xcodebuild -version | awk '/^Xcode / { print $2; exit }')"
+          [[ "$MACOS_VERSION" == 27.* ]] || { echo "::error::Expected macOS 27, got $MACOS_VERSION"; exit 1; }
+          [[ "$XCODE_VERSION" == 27.* ]] || { echo "::error::Expected Xcode 27, got $XCODE_VERSION"; exit 1; }
+          [[ "$(uname -m)" == arm64 ]] || { echo "::error::Expected Apple Silicon (arm64), got $(uname -m)"; exit 1; }
+
+      - name: Structural validation
+        run: python3 Tools/validate_project.py
+
+      - name: Swift syntax parse
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check tree_sitter tree_sitter_swift
+          python3 Tools/parse_check.py
+
+      - name: Cross-reference heuristics
+        run: python3 Tools/xref_check.py
+
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project SalmanMacCleaner.xcodeproj -scheme SalmanMacCleaner
+
+      - name: Run unit tests on macOS 27
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project SalmanMacCleaner.xcodeproj \
+            -scheme SalmanMacCleaner \
+            -destination 'platform=macOS,arch=arm64' \
+            ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee macos27-tests.log
+
+      - name: Build Debug on macOS 27
+        run: |
+          set -o pipefail
+          xcodebuild build \
             -project SalmanMacCleaner.xcodeproj \
             -scheme SalmanMacCleaner \
             -configuration Debug \
             -destination 'platform=macOS,arch=arm64' \
+            ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
-            test
+            2>&1 | tee macos27-debug.log
+
+      - name: Build, ad-hoc sign, package and smoke-test the DMG
+        id: dmg
+        env:
+          APP_ARCH: arm64
+          OUTPUT_DIR: ${{ runner.temp }}/8002CleanUp-dmg
+        run: ./Scripts/build_and_package_dmg.sh
+
+      - name: Upload the installable DMG and checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.dmg.outputs.artifact_name }}
+          path: |
+            ${{ runner.temp }}/8002CleanUp-dmg/*.dmg
+            ${{ runner.temp }}/8002CleanUp-dmg/*.dmg.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload macOS 27 logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos27-xcode27-logs
+          path: |
+            macos27-*.log
+          if-no-files-found: ignore
+          retention-days: 14
