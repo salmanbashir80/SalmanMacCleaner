@@ -1,0 +1,38 @@
+Command line invocation:
+    /Applications/Xcode_15.4.app/Contents/Developer/usr/bin/xcodebuild -project SalmanCleanerMobile.xcodeproj -scheme SalmanCleanerMobile -sdk iphonesimulator -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO build
+
+User defaults from command line:
+    IDEPackageSupportUseBuiltinSCM = YES
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+    SDKROOT = iphonesimulator17.5
+
+** INTERNAL ERROR: Uncaught exception while building **
+Uncaught Exception: -[XCConfigurationList remoteContainerItem]: unrecognized selector sent to instance 0x600001163300
+Stack:
+  0   __exceptionPreprocess (in CoreFoundation)
+  1   objc_exception_throw (in libobjc.A.dylib)
+  2   -[NSObject(NSObject) __retain_OA] (in CoreFoundation)
+  3   ___forwarding___ (in CoreFoundation)
+  4   _CF_forwarding_prep_0 (in CoreFoundation)
+  5   -[PBXTargetDependency target] (in DevToolsCore)
+  6   -[PBXTarget _uncachedOrderedRecursiveDependencies:visited:cycleCheck:] (in DevToolsCore)
+  7   -[PBXTarget orderedRecursiveDependenciesIncludingSelf:] (in DevToolsCore)
+  8   -[Xcode3TargetBuildable orderedRecursiveDependenciesIncludingSelf:includingPackages:] (in DevToolsCore)
+  9   -[IDEBuildSchemeAction buildablesForShowingIssues] (in IDEFoundation)
+ 10   -[IDEScheme _buildOperationGroupForSchemeOperationParameters:primaryBuildParameters:variantSpecifiers:buildLog:dontActuallyRunCommands:restorePersistedBuildResults:schemeActionRecord:error:] (in IDEFoundation)
+ 11   -[IDEScheme _executionOperationForSchemeOperationParameters:build:onlyBuild:buildParameters:title:buildLog:dontActuallyRunCommands:restorePersistedBuildResults:deviceAvailableChecker:error:actionCallbackBlock:] (in IDEFoundation)
+ 12   -[IDEScheme buildOnlyTaskForSchemeOperationParameters:buildLog:dontActuallyRunCommands:buildParameters:restorePersistedBuildResults:deviceAvailableChecker:error:completionBlock:] (in IDEFoundation)
+ 13   -[IDEScheme schemeOperationForSchemeOperationParameters:buildLog:overridingProperties:overridingBuildConfiguration:dontActuallyRunCommands:restorePersistedBuildResults:deviceAvailableChecker:error:completionBlock:] (in IDEFoundation)
+ 14   -[IDEScheme schemeOperationForSchemeOperationParameters:buildLog:overridingProperties:overridingBuildConfiguration:dontActuallyRunCommands:restorePersistedBuildResults:error:completionBlock:] (in IDEFoundation)
+ 15   -[Xcode3CommandLineBuildTool doSchemeBuildWithRunDestinations:runDestinationIdx:wantsSkip:buildActionTimingSection:timingSection:buildAction:isMoreDesinationsPending:actionResultBlock:title:buildLog:executionEnvironment:restorePersistedBuildResults:operationToEnqueue:error:] (in Xcode3Core)
+ 16   -[Xcode3CommandLineBuildTool doBuildForBuildAction:timingSection:colorize:colorizeFailure:error:] (in Xcode3Core)
+ 17   -[Xcode3CommandLineBuildTool _buildWithTimingSection:] (in Xcode3Core)
+ 18   -[Xcode3CommandLineBuildTool run] (in Xcode3Core)
+ 19   XcodeBuildMain (in libxcodebuildLoader.dylib)
+ 20   -[XcodebuildPreIDEHandler loadXcode3ProjectSupportAndRunXcode3CommandLineBuildToolWithArguments:] (in xcodebuild)
+ 21   -[XcodebuildPreIDEHandler runWithArguments:] (in xcodebuild)
+ 22   main (in xcodebuild)
+ 23   start (in dyld)
+
