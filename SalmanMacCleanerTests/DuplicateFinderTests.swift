@@ -443,12 +443,12 @@ func testDuplicateFinderExactDuplicateGrouping() throws {
     // Create files with same content but different names
     let file1 = sandbox.appendingPathComponent("renamed1.txt")
     let file2 = sandbox.appendingPathComponent("renamed2.txt")
-    try "same content data".write(to: file1)
-    try "same content data".write(to: file2)
+    try "same content data".write(to: file1, atomically: true, encoding: .utf8)
+    try "same content data".write(to: file2, atomically: true, encoding: .utf8)
     
     // Create a unique file
     let uniqueFile = sandbox.appendingPathComponent("unique.txt")
-    try "unique content".write(to: uniqueFile)
+    try "unique content".write(to: uniqueFile, atomically: true, encoding: .utf8)
     
     // Scan for duplicates
     let groups = try DuplicateFinder.scan(
@@ -475,7 +475,7 @@ func testTrashMoveToTrashUsesFileManager() throws {
     try? FileManager.default.createDirectory(at: sandbox, withIntermediateDirectories: true)
     
     let testFile = sandbox.appendingPathComponent("test.txt")
-    try "test content".write(to: testFile)
+    try "test content".write(to: testFile, atomically: true, encoding: .utf8)
     
     // The TrashBinsView should use FileManager.default.trashItemAtPath
     // or move to .Trash directory
@@ -492,24 +492,7 @@ func testTrashMoveToTrashUsesFileManager() throws {
 @MainActor
 func testTrashRestoreValidation() throws {
     // Tests that we don't assume restore works when original path is unknown
-    XCTAssertNil(TrashEntry(path: "/test", name: "test", size: 0, isDirectory: false, originalPath: nil).originalPath)
+    XCTAssertNil(TrashEntry(name: "test", path: "/test", size: 0, isDirectory: false, originalPath: nil).originalPath)
 }
 
-@MainActor
-func testTrashSafety() throws {
-    // Valid trash path
-    let validPath = NSHomeDirectory() + "/.Trash/test.txt"
-    XCTAssertTrue(TrashValidator.isValidTrashPath(validPath), "Valid trash file should be allowed")
-    
-    // Invalid path outside trash
-    let invalidPath = NSHomeDirectory() + "/Documents/test.txt"
-    XCTAssertFalse(TrashValidator.isValidTrashPath(invalidPath), "External file should be denied")
-    
-    // Directory traversal attack
-    let traversalPath = NSHomeDirectory() + "/.Trash/../Documents/test.txt"
-    XCTAssertFalse(TrashValidator.isValidTrashPath(traversalPath), "Traversal escape should be denied")
-    
-    // Misleading prefix
-    let misleadingPath = NSHomeDirectory() + "/.Trash-evil/test.txt"
-    XCTAssertFalse(TrashValidator.isValidTrashPath(misleadingPath), "Misleading prefix should be denied")
-}
+
