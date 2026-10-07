@@ -33,11 +33,11 @@ jobs:
           -sdk iphonesimulator \
           -destination 'generic/platform=iOS Simulator' \
           CODE_SIGNING_ALLOWED=NO \
-          build > build.log 2>&1 || (tail -n 200 build.log && exit 1)
+          build > build.log 2>&1 || exit 1
 
     - name: Run Tests on Available Simulator
+      if: success()
       run: |
-        # Find first available iPhone simulator
         SIMULATOR=$(xcrun simctl list devices available | grep -i "iPhone" | head -1 | grep -o -E "iPhone [a-zA-Z0-9 ]+" || echo "iPhone 15")
         echo "Using simulator: $SIMULATOR"
         xcodebuild \
@@ -45,4 +45,13 @@ jobs:
           -scheme SalmanCleanerMobile \
           -destination "platform=iOS Simulator,name=$SIMULATOR" \
           CODE_SIGNING_ALLOWED=NO \
-          test > test.log 2>&1 || (tail -n 200 test.log && exit 1)
+          test > test.log 2>&1 || exit 1
+
+    - name: Upload Logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          build.log
+          test.log
